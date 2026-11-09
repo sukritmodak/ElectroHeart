@@ -316,6 +316,54 @@ input[type=checkbox] {accent-color:var(--green)}
     </div>
   </div>
 
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="section-title">HEART SOUND DETECTION · EXPERIMENTAL</div>
+    <div class="stats" style="margin-bottom:0">
+      <div>
+        <div class="stat-label">MEASURED HEART RATE</div>
+        <div class="stat-value" id="heartRate">-- <span class="small">BPM</span></div>
+        <div class="small">Calculated from consecutive S1-to-S1 intervals</div>
+      </div>
+      <div>
+        <div class="stat-label">LATEST SOUND</div>
+        <div class="stat-value" id="latestSound">--</div>
+        <div class="small" id="latestSoundTime">No sound detected</div>
+      </div>
+      <div>
+        <div class="stat-label">S1 DETECTIONS</div>
+        <div class="stat-value" id="s1Count">0</div>
+        <div class="small">Used for heart-rate calculation</div>
+      </div>
+      <div>
+        <div class="stat-label">SOUND THRESHOLD</div>
+        <div class="stat-value" id="soundThreshold">--</div>
+        <div class="small">Adaptive ADC amplitude</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:13px">
+      <div class="small" style="margin-bottom:8px">DETECTED EVENTS (only events that cross the signal threshold appear)</div>
+      <div id="soundEvents" class="small">Waiting for heart sound data…</div>
+    </div>
+    <p class="small" style="margin:14px 0 0">S1/S2 are estimated from timing. Additional peaks may be marked as possible S3/S4; acoustic timing alone cannot clinically confirm these sounds. This experimental detector needs validation with real recordings.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="section-title">ADC DATA · CSV</div>
+    <div class="small" style="margin-bottom:10px">Live ADC values are shown above. Recording CSV includes sample time, all three raw ADC channels, detected sound label and calculated BPM.</div>
+    <div class="toolbar" style="margin-bottom:0">
+      <button id="importCsvBtn">IMPORT CSV</button>
+      <input id="csvFile" type="file" accept=".csv,text/csv" style="display:none">
+      <span class="small" id="csvStatus">No CSV file imported</span>
+    </div>
+    <div style="overflow:auto;margin-top:12px;max-height:220px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px" id="csvPreview">
+        <thead><tr><th style="text-align:left;padding:7px;border-bottom:1px solid var(--line)">Time / Frame</th><th style="padding:7px;border-bottom:1px solid var(--line)">MIC 1 ADC</th><th style="padding:7px;border-bottom:1px solid var(--line)">MIC 2 ADC</th><th style="padding:7px;border-bottom:1px solid var(--line)">MIC 3 ADC</th><th style="padding:7px;border-bottom:1px solid var(--line)">Sound</th><th style="padding:7px;border-bottom:1px solid var(--line)">BPM</th></tr></thead>
+        <tbody id="csvPreviewBody"><tr><td colspan="6" class="small" style="padding:8px">Import a CSV to preview its ADC data here.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ANATOMICAL POSITION DISPLAY -->
 
   <div class="card" style="margin-bottom:18px">
@@ -564,6 +612,21 @@ let latest = [2048,2048,2048];
 let baselines = [2048,2048,2048];
 let peaks = [0,0,0];
 
+// Heart-sound detector state. All event times are derived from the 2 kHz sample clock.
+let sampleClock = 0;
+let soundEnvelope = 0;
+let noiseFloor = 3;
+let previousEnvelope = 0;
+let detectorArmed = true;
+let lastPeakSample = -100000;
+let lastS1Sample = null;
+let lastS2Sample = null;
+let pendingExtraSample = null;
+let s1Count = 0;
+let detectedBpm = null;
+let lastEventLabel = "";
+let csvImportedRows = [];
+
 let parserBuffer = new Uint8Array(0);
 
 // Audio ring buffer
@@ -746,6 +809,7 @@ function processBytes(chunk) {
 function processSample(values) {
 
   totalFrames++;
+  sampleClock++;
 
   for (let i=0;i<3;i++) {
 
@@ -772,6 +836,8 @@ function processSample(values) {
   document.getElementById("value1").textContent = values[0];
   document.getElementById("value2").textContent = values[1];
   document.getElementById("value3").textContent = values[2];
+
+  detectHeartSound(values);
 
   document.getElementById("peak1").textContent =
     "Peak: " + Math.round(peaks[0]);
@@ -808,12 +874,127 @@ function processSample(values) {
   if (recording) {
 
     recordingRows.push([
+      (sampleClock / SAMPLE_RATE).toFixed(4),
       totalFrames,
       values[0],
       values[1],
-      values[2]
+      values[2],
+      lastEventLabel,
+      detectedBpm === null ? "" : detectedBpm.toFixed(1)
     ]);
   }
+}
+
+
+// =============================================
+// HEART SOUND DETECTION (EXPERIMENTAL)
+// S1-to-S1 interval is used for BPM.
+// =============================================
+
+function detectHeartSound(values) {
+  // Use the strongest centered signal among the three microphones.
+  let amplitude = 0;
+  for (let i = 0; i < 3; i++) {
+    amplitude = Math.max(amplitude, Math.abs(values[i] - baselines[i]));
+  }
+
+  // Smooth rectified amplitude into a short-time envelope.
+  soundEnvelope += 0.035 * (amplitude - soundEnvelope);
+
+  // Update noise estimate only during quieter portions.
+  const adaptiveThreshold = Math.max(18, noiseFloor * 3.2);
+  if (soundEnvelope < adaptiveThreshold) {
+    noiseFloor += 0.002 * (soundEnvelope - noiseFloor);
+  }
+
+  document.getElementById("soundThreshold").textContent =
+    Math.round(Math.max(18, noiseFloor * 3.2));
+
+  // Detect a local envelope peak; 120 ms refractory period suppresses ringing.
+  const rising = soundEnvelope > previousEnvelope;
+  const falling = soundEnvelope < previousEnvelope;
+  const crossed = soundEnvelope >= Math.max(18, noiseFloor * 3.2);
+
+  if (detectorArmed && falling && !rising &&
+      previousEnvelope >= Math.max(18, noiseFloor * 3.2) &&
+      sampleClock - lastPeakSample >= Math.round(0.12 * SAMPLE_RATE)) {
+    registerSoundPeak(sampleClock - 1);
+    lastPeakSample = sampleClock - 1;
+    detectorArmed = false;
+  }
+
+  if (!crossed && soundEnvelope < Math.max(18, noiseFloor * 3.2) * 0.55) {
+    detectorArmed = true;
+  }
+
+  previousEnvelope = soundEnvelope;
+}
+
+function registerSoundPeak(atSample) {
+  let label = "";
+  const sinceS1 = lastS1Sample === null ? Infinity : (atSample - lastS1Sample) / SAMPLE_RATE;
+  const sinceS2 = lastS2Sample === null ? Infinity : (atSample - lastS2Sample) / SAMPLE_RATE;
+
+  if (lastS1Sample === null || sinceS1 > 0.45) {
+    // A new S1 starts the next cardiac cycle.
+    if (pendingExtraSample !== null) {
+      const beforeS1 = (atSample - pendingExtraSample) / SAMPLE_RATE;
+      if (beforeS1 >= 0.08 && beforeS1 <= 0.25) {
+        addSoundEvent("Possible S4", pendingExtraSample);
+      }
+      pendingExtraSample = null;
+    }
+
+    if (lastS1Sample !== null) {
+      const interval = (atSample - lastS1Sample) / SAMPLE_RATE;
+      if (interval >= 0.30 && interval <= 2.0) {
+        detectedBpm = 60 / interval;
+        document.getElementById("heartRate").innerHTML =
+          detectedBpm.toFixed(1) + ' <span class="small">BPM</span>';
+      } else {
+        detectedBpm = null;
+        document.getElementById("heartRate").innerHTML =
+          '-- <span class="small">BPM</span>';
+      }
+    }
+
+    lastS1Sample = atSample;
+    s1Count++;
+    document.getElementById("s1Count").textContent = s1Count;
+    label = "S1";
+  } else if (lastS2Sample === null || (atSample - lastS1Sample) / SAMPLE_RATE <= 0.45 &&
+             (atSample - lastS1Sample) / SAMPLE_RATE >= 0.10 &&
+             lastS2Sample < lastS1Sample) {
+    lastS2Sample = atSample;
+    label = "S2";
+  } else if (sinceS2 >= 0.08 && sinceS2 <= 0.25) {
+    pendingExtraSample = atSample;
+    label = "Possible S3";
+  } else if (sinceS1 > 0.45) {
+    // Wait for next cycle's S1 to decide whether this extra event was S4.
+    pendingExtraSample = atSample;
+    return;
+  } else {
+    return;
+  }
+
+  addSoundEvent(label, atSample);
+}
+
+function addSoundEvent(label, atSample) {
+  lastEventLabel = label;
+  const seconds = (atSample / SAMPLE_RATE).toFixed(3);
+  document.getElementById("latestSound").textContent = label;
+  document.getElementById("latestSoundTime").textContent = seconds + " s from start";
+
+  const box = document.getElementById("soundEvents");
+  const line = document.createElement("div");
+  line.style.padding = "5px 0";
+  line.style.borderBottom = "1px solid var(--line)";
+  line.textContent = label + "  ·  " + seconds + " s" +
+    (detectedBpm === null ? "" : "  ·  HR " + detectedBpm.toFixed(1) + " BPM");
+  box.prepend(line);
+  while (box.children.length > 8) box.removeChild(box.lastChild);
 }
 
 function normalized(i) {
@@ -1078,6 +1259,82 @@ document.getElementById("recordBtn").onclick = () => {
 
   }
 };
+
+
+// =============================================
+// IMPORT AND PREVIEW CSV ADC DATA
+// Expected columns: Frame,MIC1_ADC,MIC2_ADC,MIC3_ADC
+// Optional: Time_s, Sound_Event, Heart_Rate_BPM
+// =============================================
+
+document.getElementById("importCsvBtn").onclick = () =>
+  document.getElementById("csvFile").click();
+
+document.getElementById("csvFile").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const textData = await file.text();
+    const lines = textData.trim().split(/\r?\n/);
+    if (lines.length < 2) throw new Error("CSV has no sample rows.");
+
+    const headers = lines[0].split(",").map(v => v.trim().toLowerCase());
+    const findCol = (...names) => headers.findIndex(h => names.includes(h));
+    const c1 = findCol("mic1_adc", "ch1_adc", "adc1");
+    const c2 = findCol("mic2_adc", "ch2_adc", "adc2");
+    const c3 = findCol("mic3_adc", "ch3_adc", "adc3");
+    const cf = findCol("frame", "sample", "time_s", "timestamp");
+    const ce = findCol("sound_event", "sound", "event");
+    const cb = findCol("heart_rate_bpm", "bpm");
+
+    if ([c1,c2,c3].some(i => i < 0))
+      throw new Error("CSV must contain MIC1_ADC, MIC2_ADC and MIC3_ADC columns.");
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split(",");
+      const vals = [c1,c2,c3].map(c => Number(cells[c]));
+      if (vals.every(v => Number.isFinite(v) && v >= 0 && v <= 4095)) {
+        rows.push({
+          frame: cf >= 0 ? cells[cf] : i,
+          adc: vals,
+          sound: ce >= 0 ? (cells[ce] || "") : "",
+          bpm: cb >= 0 ? (cells[cb] || "") : ""
+        });
+      }
+    }
+    if (!rows.length) throw new Error("No valid ADC rows found.");
+
+    csvImportedRows = rows;
+    channels = [0,1,2].map(ch =>
+      rows.slice(-6000).map(row => row.adc[ch])
+    );
+    latest = rows[rows.length - 1].adc.slice();
+    document.getElementById("value1").textContent = latest[0];
+    document.getElementById("value2").textContent = latest[1];
+    document.getElementById("value3").textContent = latest[2];
+
+    const body = document.getElementById("csvPreviewBody");
+    body.innerHTML = "";
+    rows.slice(-100).reverse().forEach(row => {
+      const tr = document.createElement("tr");
+      [row.frame, ...row.adc, row.sound || "—", row.bpm || "—"].forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        td.style.padding = "6px";
+        td.style.borderBottom = "1px solid var(--line)";
+        td.style.textAlign = "center";
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+    document.getElementById("csvStatus").textContent =
+      file.name + " · " + rows.length.toLocaleString() + " valid ADC rows loaded";
+  } catch (err) {
+    document.getElementById("csvStatus").textContent = "CSV error: " + err.message;
+  }
+});
 
 // =============================================
 // RECORDING TIMER
