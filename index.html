@@ -810,6 +810,7 @@ function processSample(values) {
 
   totalFrames++;
   sampleClock++;
+  lastEventLabel = ""; // CSV marks only the sample where a sound event is detected.
 
   for (let i=0;i<3;i++) {
 
