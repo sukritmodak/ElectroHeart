@@ -300,7 +300,7 @@ input[type=checkbox] {accent-color:var(--green)}
     <div class="card">
       <div class="stat-label">TARGET SAMPLE RATE</div>
       <div class="stat-value">2,000 <span class="small">Hz</span></div>
-      <div class="small">Per channel · 2-second waveform display</div>
+      <div class="small">Per channel · 3-second waveform display</div>
     </div>
 
     <div class="card">
@@ -555,9 +555,9 @@ let totalFrames = 0;
 let selectedMode = "1";
 
 let channels = [
-  new Array(4000).fill(2048),
-  new Array(4000).fill(2048),
-  new Array(4000).fill(2048)
+  new Array(6000).fill(2048),
+  new Array(6000).fill(2048),
+  new Array(6000).fill(2048)
 ];
 
 let latest = [2048,2048,2048];
@@ -753,7 +753,7 @@ function processSample(values) {
 
     channels[i].push(values[i]);
 
-    if (channels[i].length > 4000) {
+    if (channels[i].length > 6000) {
       channels[i].shift();
     }
 
