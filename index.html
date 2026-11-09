@@ -321,36 +321,58 @@ input[type=checkbox] {accent-color:var(--green)}
     <div class="section-title">HEART SOUND DETECTION · EXPERIMENTAL</div>
     <div class="stats" style="margin-bottom:0">
       <div>
-        <div class="stat-label">MEASURED HEART RATE</div>
+        <div class="stat-label">MIC 1 · HEART RATE</div>
+        <div class="stat-value" id="heartRate1">-- <span class="small">BPM</span></div>
+        <div class="small">MC1 successive S1 intervals · S1 count: <span id="s1Count1">0</span></div>
+      </div>
+      <div>
+        <div class="stat-label">MIC 2 · HEART RATE</div>
+        <div class="stat-value" id="heartRate2">-- <span class="small">BPM</span></div>
+        <div class="small">MC2 successive S1 intervals · S1 count: <span id="s1Count2">0</span></div>
+      </div>
+      <div>
+        <div class="stat-label">MIC 3 · HEART RATE</div>
+        <div class="stat-value" id="heartRate3">-- <span class="small">BPM</span></div>
+        <div class="small">MC3 successive S1 intervals · S1 count: <span id="s1Count3">0</span></div>
+      </div>
+      <div>
+        <div class="stat-label">CONSENSUS HEART RATE</div>
         <div class="stat-value" id="heartRate">-- <span class="small">BPM</span></div>
-        <div class="small">Calculated from consecutive S1-to-S1 intervals</div>
+        <div class="small" id="consensusStatus">Waiting for at least two agreeing channels</div>
+      </div>
+    </div>
+    <div class="stats" style="margin-top:14px;margin-bottom:0">
+      <div>
+        <div class="stat-label">LATEST MC1 SOUND</div>
+        <div class="stat-value" id="latestSound1">--</div>
+        <div class="small" id="latestSoundTime1">No sound detected</div>
       </div>
       <div>
-        <div class="stat-label">LATEST SOUND</div>
-        <div class="stat-value" id="latestSound">--</div>
-        <div class="small" id="latestSoundTime">No sound detected</div>
+        <div class="stat-label">LATEST MC2 SOUND</div>
+        <div class="stat-value" id="latestSound2">--</div>
+        <div class="small" id="latestSoundTime2">No sound detected</div>
       </div>
       <div>
-        <div class="stat-label">S1 DETECTIONS</div>
-        <div class="stat-value" id="s1Count">0</div>
-        <div class="small">Used for heart-rate calculation</div>
+        <div class="stat-label">LATEST MC3 SOUND</div>
+        <div class="stat-value" id="latestSound3">--</div>
+        <div class="small" id="latestSoundTime3">No sound detected</div>
       </div>
       <div>
-        <div class="stat-label">SOUND THRESHOLD</div>
-        <div class="stat-value" id="soundThreshold">--</div>
-        <div class="small">Adaptive ADC amplitude</div>
+        <div class="stat-label">DETECTION THRESHOLDS</div>
+        <div class="stat-value" id="soundThreshold">-- / -- / --</div>
+        <div class="small">MC1 / MC2 / MC3 adaptive ADC amplitudes</div>
       </div>
     </div>
     <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:13px">
-      <div class="small" style="margin-bottom:8px">DETECTED EVENTS (only events that cross the signal threshold appear)</div>
+      <div class="small" style="margin-bottom:8px">INDEPENDENT CHANNEL EVENTS</div>
       <div id="soundEvents" class="small">Waiting for heart sound data…</div>
     </div>
-    <p class="small" style="margin:14px 0 0">S1/S2 are estimated from timing. Additional peaks may be marked as possible S3/S4; acoustic timing alone cannot clinically confirm these sounds. This experimental detector needs validation with real recordings.</p>
+    <p class="small" style="margin:14px 0 0">Each microphone has its own detector and S1-to-S1 BPM calculation. Consensus is displayed only when at least two valid channel BPM values agree within 15%. Sound labels are experimental estimates, not clinical confirmation.</p>
   </div>
 
   <div class="card" style="margin-bottom:18px">
     <div class="section-title">ADC DATA · CSV</div>
-    <div class="small" style="margin-bottom:10px">Live ADC values are shown above. Recording CSV includes sample time, all three raw ADC channels, detected sound label and calculated BPM.</div>
+    <div class="small" style="margin-bottom:10px">Live ADC values are shown above. Recording CSV includes sample time, all three raw ADC channels, each microphone event and each independent BPM, plus consensus BPM.</div>
     <div class="toolbar" style="margin-bottom:0">
       <button id="importCsvBtn">IMPORT CSV</button>
       <input id="csvFile" type="file" accept=".csv,text/csv" style="display:none">
@@ -614,17 +636,14 @@ let peaks = [0,0,0];
 
 // Heart-sound detector state. All event times are derived from the 2 kHz sample clock.
 let sampleClock = 0;
-let soundEnvelope = 0;
-let noiseFloor = 3;
-let previousEnvelope = 0;
-let detectorArmed = true;
-let lastPeakSample = -100000;
-let lastS1Sample = null;
-let lastS2Sample = null;
-let pendingExtraSample = null;
-let s1Count = 0;
-let detectedBpm = null;
-let lastEventLabel = "";
+const detectors = [0,1,2].map(() => ({
+  envelope: 0, noiseFloor: 3, previousEnvelope: 0,
+  armed: true, lastPeakSample: -100000,
+  lastS1Sample: null, lastS2Sample: null,
+  s1Count: 0, bpm: null, lastEvent: ""
+}));
+let consensusBpm = null;
+let lastEventLabels = ["","",""];
 let csvImportedRows = [];
 
 let parserBuffer = new Uint8Array(0);
@@ -809,7 +828,7 @@ function processSample(values) {
 
   totalFrames++;
   sampleClock++;
-  lastEventLabel = ""; // CSV marks only the sample where a sound event is detected.
+  lastEventLabels = ["","",""]; // CSV marks only samples where a channel event is detected.
 
   for (let i=0;i<3;i++) {
 
@@ -837,7 +856,7 @@ function processSample(values) {
   document.getElementById("value2").textContent = values[1];
   document.getElementById("value3").textContent = values[2];
 
-  detectHeartSound(values);
+  detectHeartSounds(values);
 
   document.getElementById("peak1").textContent =
     "Peak: " + Math.round(peaks[0]);
@@ -879,122 +898,129 @@ function processSample(values) {
       values[0],
       values[1],
       values[2],
-      lastEventLabel,
-      detectedBpm === null ? "" : detectedBpm.toFixed(1)
+      ...lastEventLabels,
+      ...detectors.map(d => d.bpm === null ? "" : d.bpm.toFixed(1)),
+      consensusBpm === null ? "" : consensusBpm.toFixed(1)
     ]);
   }
 }
 
 
 // =============================================
-// HEART SOUND DETECTION (EXPERIMENTAL)
-// S1-to-S1 interval is used for BPM.
+// INDEPENDENT HEART SOUND DETECTION FOR MC1, MC2, MC3
+// Each channel has its own envelope, threshold, S1/S2 timing and BPM.
+// BPM = 60 / time between successive S1 events on the SAME channel.
 // =============================================
 
-function detectHeartSound(values) {
-  // Use the strongest centered signal among the three microphones.
-  let amplitude = 0;
+function detectHeartSounds(values) {
+  const thresholds = [];
   for (let i = 0; i < 3; i++) {
-    amplitude = Math.max(amplitude, Math.abs(values[i] - baselines[i]));
+    const d = detectors[i];
+    const amplitude = Math.abs(values[i] - baselines[i]);
+    d.envelope += 0.035 * (amplitude - d.envelope);
+    const threshold = Math.max(18, d.noiseFloor * 3.2);
+    if (d.envelope < threshold) {
+      d.noiseFloor += 0.002 * (d.envelope - d.noiseFloor);
+    }
+    const currentThreshold = Math.max(18, d.noiseFloor * 3.2);
+    thresholds.push(Math.round(currentThreshold));
+
+    const falling = d.envelope < d.previousEnvelope;
+    const crossed = d.envelope >= currentThreshold;
+    if (d.armed && falling && d.previousEnvelope >= currentThreshold &&
+        sampleClock - d.lastPeakSample >= Math.round(0.12 * SAMPLE_RATE)) {
+      registerChannelPeak(i, sampleClock - 1);
+      d.lastPeakSample = sampleClock - 1;
+      d.armed = false;
+    }
+    if (!crossed && d.envelope < currentThreshold * 0.55) d.armed = true;
+    d.previousEnvelope = d.envelope;
   }
-
-  // Smooth rectified amplitude into a short-time envelope.
-  soundEnvelope += 0.035 * (amplitude - soundEnvelope);
-
-  // Update noise estimate only during quieter portions.
-  const adaptiveThreshold = Math.max(18, noiseFloor * 3.2);
-  if (soundEnvelope < adaptiveThreshold) {
-    noiseFloor += 0.002 * (soundEnvelope - noiseFloor);
-  }
-
-  document.getElementById("soundThreshold").textContent =
-    Math.round(Math.max(18, noiseFloor * 3.2));
-
-  // Detect a local envelope peak; 120 ms refractory period suppresses ringing.
-  const rising = soundEnvelope > previousEnvelope;
-  const falling = soundEnvelope < previousEnvelope;
-  const crossed = soundEnvelope >= Math.max(18, noiseFloor * 3.2);
-
-  if (detectorArmed && falling && !rising &&
-      previousEnvelope >= Math.max(18, noiseFloor * 3.2) &&
-      sampleClock - lastPeakSample >= Math.round(0.12 * SAMPLE_RATE)) {
-    registerSoundPeak(sampleClock - 1);
-    lastPeakSample = sampleClock - 1;
-    detectorArmed = false;
-  }
-
-  if (!crossed && soundEnvelope < Math.max(18, noiseFloor * 3.2) * 0.55) {
-    detectorArmed = true;
-  }
-
-  previousEnvelope = soundEnvelope;
+  document.getElementById("soundThreshold").textContent = thresholds.join(" / ");
+  updateConsensusBpm();
 }
 
-function registerSoundPeak(atSample) {
+function registerChannelPeak(channel, atSample) {
+  const d = detectors[channel];
+  const sinceS1 = d.lastS1Sample === null ? Infinity : (atSample - d.lastS1Sample) / SAMPLE_RATE;
   let label = "";
-  const sinceS1 = lastS1Sample === null ? Infinity : (atSample - lastS1Sample) / SAMPLE_RATE;
-  const sinceS2 = lastS2Sample === null ? Infinity : (atSample - lastS2Sample) / SAMPLE_RATE;
 
-  if (lastS1Sample === null || sinceS1 > 0.45) {
-    // A new S1 starts the next cardiac cycle.
-    if (pendingExtraSample !== null) {
-      const beforeS1 = (atSample - pendingExtraSample) / SAMPLE_RATE;
-      if (beforeS1 >= 0.08 && beforeS1 <= 0.25) {
-        addSoundEvent("Possible S4", pendingExtraSample);
-      }
-      pendingExtraSample = null;
-    }
-
-    if (lastS1Sample !== null) {
-      const interval = (atSample - lastS1Sample) / SAMPLE_RATE;
+  if (d.lastS1Sample === null || sinceS1 > 0.45) {
+    if (d.lastS1Sample !== null) {
+      const interval = sinceS1;
       if (interval >= 0.30 && interval <= 2.0) {
-        detectedBpm = 60 / interval;
-        document.getElementById("heartRate").innerHTML =
-          detectedBpm.toFixed(1) + ' <span class="small">BPM</span>';
+        d.bpm = 60 / interval;
       } else {
-        detectedBpm = null;
-        document.getElementById("heartRate").innerHTML =
-          '-- <span class="small">BPM</span>';
+        d.bpm = null;
       }
     }
-
-    lastS1Sample = atSample;
-    s1Count++;
-    document.getElementById("s1Count").textContent = s1Count;
+    d.lastS1Sample = atSample;
+    d.lastS2Sample = null;
+    d.s1Count++;
+    document.getElementById("s1Count" + (channel + 1)).textContent = d.s1Count;
     label = "S1";
-  } else if (lastS2Sample === null || (atSample - lastS1Sample) / SAMPLE_RATE <= 0.45 &&
-             (atSample - lastS1Sample) / SAMPLE_RATE >= 0.10 &&
-             lastS2Sample < lastS1Sample) {
-    lastS2Sample = atSample;
-    label = "S2";
-  } else if (sinceS2 >= 0.08 && sinceS2 <= 0.25) {
-    pendingExtraSample = atSample;
-    label = "Possible S3";
-  } else if (sinceS2 > 0.25 && sinceS1 < 1.5) {
-    // Hold an extra peak; if it occurs shortly before the next S1, mark it as possible S4.
-    pendingExtraSample = atSample;
-    return;
+    updateChannelBpm(channel);
   } else {
-    return;
+    const sinceS2 = d.lastS2Sample === null ? Infinity : (atSample - d.lastS2Sample) / SAMPLE_RATE;
+    if (d.lastS2Sample === null && sinceS1 >= 0.10 && sinceS1 <= 0.45) {
+      d.lastS2Sample = atSample;
+      label = "S2";
+    } else if (sinceS2 >= 0.08 && sinceS2 <= 0.25) {
+      label = "Possible S3";
+    } else {
+      return;
+    }
   }
-
-  addSoundEvent(label, atSample);
+  addChannelSoundEvent(channel, label, atSample);
 }
 
-function addSoundEvent(label, atSample) {
-  lastEventLabel = label;
+function updateChannelBpm(channel) {
+  const el = document.getElementById("heartRate" + (channel + 1));
+  const bpm = detectors[channel].bpm;
+  el.innerHTML = bpm === null
+    ? '-- <span class="small">BPM</span>'
+    : bpm.toFixed(1) + ' <span class="small">BPM</span>';
+}
+
+function updateConsensusBpm() {
+  const valid = detectors.map(d => d.bpm).filter(v => Number.isFinite(v));
+  const status = document.getElementById("consensusStatus");
+  const display = document.getElementById("heartRate");
+  if (valid.length < 2) {
+    consensusBpm = null;
+    display.innerHTML = '-- <span class="small">BPM</span>';
+    status.textContent = "Need at least two valid channel readings";
+    return;
+  }
+  const sorted = valid.slice().sort((a,b) => a-b);
+  const median = sorted.length === 2 ? (sorted[0] + sorted[1]) / 2 : sorted[1];
+  const spread = (Math.max(...valid) - Math.min(...valid)) / median;
+  if (spread > 0.15) {
+    consensusBpm = null;
+    display.innerHTML = '-- <span class="small">BPM</span>';
+    status.textContent = "Channel readings disagree; consensus withheld";
+    return;
+  }
+  consensusBpm = valid.reduce((sum,v) => sum + v, 0) / valid.length;
+  display.innerHTML = consensusBpm.toFixed(1) + ' <span class="small">BPM</span>';
+  status.textContent = valid.length + " channels agree · average of valid channel BPMs";
+}
+
+function addChannelSoundEvent(channel, label, atSample) {
+  lastEventLabels[channel] = label;
+  detectors[channel].lastEvent = label;
   const seconds = (atSample / SAMPLE_RATE).toFixed(3);
-  document.getElementById("latestSound").textContent = label;
-  document.getElementById("latestSoundTime").textContent = seconds + " s from start";
+  document.getElementById("latestSound" + (channel + 1)).textContent = label;
+  document.getElementById("latestSoundTime" + (channel + 1)).textContent = seconds + " s from start";
 
   const box = document.getElementById("soundEvents");
   const line = document.createElement("div");
   line.style.padding = "5px 0";
   line.style.borderBottom = "1px solid var(--line)";
-  line.textContent = label + "  ·  " + seconds + " s" +
-    (detectedBpm === null ? "" : "  ·  HR " + detectedBpm.toFixed(1) + " BPM");
+  const bpmText = detectors[channel].bpm === null ? "" : " · MC" + (channel + 1) + " HR " + detectors[channel].bpm.toFixed(1) + " BPM";
+  line.textContent = "MC" + (channel + 1) + " · " + label + " · " + seconds + " s" + bpmText;
   box.prepend(line);
-  while (box.children.length > 8) box.removeChild(box.lastChild);
+  while (box.children.length > 12) box.removeChild(box.lastChild);
 }
 
 function normalized(i) {
