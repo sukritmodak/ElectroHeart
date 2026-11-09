@@ -271,7 +271,7 @@ input[type=checkbox] {accent-color:var(--green)}
     <div class="brand-icon">♥</div>
     <div>
       <h1>CARDIAC ACOUSTIC MONITOR</h1>
-      <div class="subtitle">ESP32 · THREE CHANNEL HEART SOUND ANALYSIS</div>
+      <div class="subtitle">ESP32 · USB + BLUETOOTH · THREE CHANNEL HEART SOUND ANALYSIS</div>
     </div>
   </div>
 
@@ -284,7 +284,7 @@ input[type=checkbox] {accent-color:var(--green)}
 <main>
 
   <div class="toolbar">
-    <button class="primary" id="connectBtn">CONNECT ESP32</button>
+    <button class="primary" id="connectBtn">CONNECT USB / BLUETOOTH</button>
     <button id="disconnectBtn" disabled>DISCONNECT</button>
     <button id="recordBtn">● START RECORDING</button>
     <button id="exportBtn">EXPORT CSV</button>
@@ -570,7 +570,7 @@ input[type=checkbox] {accent-color:var(--green)}
   <div class="card">
     <div class="section-title">ACQUISITION INFORMATION</div>
     <div class="small" id="connectionInfo">
-      No ESP32 data received yet.
+      Choose the ESP32 USB serial port OR pair ESP32-ElectroHeart in Windows Bluetooth settings and choose its outgoing Bluetooth COM port. The same connection button supports both.
     </div>
   </div>
 
@@ -653,7 +653,7 @@ const colors = [
 document.getElementById("connectBtn").onclick = async () => {
 
   if (!("serial" in navigator)) {
-    alert("Web Serial is not supported. Please use Chrome or Edge on your computer.");
+    alert("Web Serial is not supported. Use Chrome or Edge on a computer. Bluetooth must be paired as a Windows Bluetooth COM port first.");
     return;
   }
 
@@ -675,8 +675,7 @@ document.getElementById("connectBtn").onclick = async () => {
     document.getElementById("disconnectBtn").disabled = false;
 
     document.getElementById("connectionInfo").textContent =
-      "Connected at " + BAUD_RATE +
-      " baud. Waiting for three-channel analog data.";
+      "Serial port opened (USB or Bluetooth SPP). Waiting for three-channel analog data.";
 
     readSerial();
 
