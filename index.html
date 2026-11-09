@@ -1392,7 +1392,7 @@ document.getElementById("exportBtn").onclick = () => {
     return;
   }
 
-  let csv = "Time_s,Frame,MIC1_ADC,MIC2_ADC,MIC3_ADC,Sound_Event,Heart_Rate_BPM\n";
+  let csv = "Time_s,Frame,MIC1_ADC,MIC2_ADC,MIC3_ADC,MC1_Event,MC2_Event,MC3_Event,MC1_BPM,MC2_BPM,MC3_BPM,Consensus_BPM\n";
 
   for (const row of recordingRows) {
     csv += row.join(",") + "\n";
