@@ -179,6 +179,25 @@ button:disabled {opacity:.4;cursor:not-allowed}
 
 .wave-card {padding:16px 18px}
 
+.hero-monitor{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:center;margin-bottom:18px;padding:22px;background:radial-gradient(circle at 15% 50%,#26344c,#101b2b 55%,#0c1523)}
+.heart-stage{display:flex;align-items:center;justify-content:center;min-height:160px}
+.heart-visual{width:125px;height:125px;filter:drop-shadow(0 0 18px rgba(255,82,112,.3));transform-origin:center}
+.heart-visual.pulse{animation:heartBeat .48s ease-out}
+@keyframes heartBeat{0%{transform:scale(1)}18%{transform:scale(1.22)}38%{transform:scale(.98)}58%{transform:scale(1.12)}100%{transform:scale(1)}}
+.hero-readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hero-readout{background:#0b1523;border:1px solid #293b53;border-radius:11px;padding:13px}
+.channel-name{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.adc-number{font-size:27px;font-weight:750;margin-top:7px;font-variant-numeric:tabular-nums}
+.adc-unit{font-size:10px;color:var(--muted)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.chart-card{padding:16px 18px;min-width:0}
+.chart-card canvas{height:210px}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 12px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.legend-line{width:17px;height:3px;border-radius:4px}
+@media(max-width:750px){.hero-monitor{grid-template-columns:1fr}.hero-readouts{grid-template-columns:1fr}.chart-grid{grid-template-columns:1fr}}
+
+
 .wave-head {
   display:flex;
   justify-content:space-between;
@@ -290,6 +309,24 @@ input[type=checkbox] {accent-color:var(--green)}
     <button id="exportBtn">EXPORT CSV</button>
   </div>
 
+  <section class="card hero-monitor" aria-label="Live heart and raw ADC monitor">
+    <div class="heart-stage">
+      <svg id="heartVisual" class="heart-visual" viewBox="0 0 120 120" role="img" aria-label="Heartbeat animation">
+        <defs><linearGradient id="heartFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff8a9d"/><stop offset="100%" stop-color="#e52e59"/></linearGradient></defs>
+        <path d="M60 105 C49 94 13 67 13 39 C13 13 45 4 60 29 C75 4 107 13 107 39 C107 67 71 94 60 105Z" fill="url(#heartFill)" stroke="#ffc0ca" stroke-width="2"/>
+        <path d="M20 58 H40 L49 43 L61 76 L72 53 L80 62 H101" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="section-title">LIVE CARDIAC ACTIVITY · REAL SENSOR DATA</div>
+      <div class="small" id="heartAnimationStatus" style="margin:-5px 0 13px">Heart animation waits for a detected S1 event</div>
+      <div class="hero-readouts">
+        <div class="hero-readout"><div class="channel-name">MC1 · RAW ADC</div><div class="adc-number" id="heroAdc1">--</div><div class="adc-unit">GPIO 34 · 12-bit ADC</div></div>
+        <div class="hero-readout"><div class="channel-name">MC2 · RAW ADC</div><div class="adc-number" id="heroAdc2">--</div><div class="adc-unit">GPIO 35 · 12-bit ADC</div></div>
+        <div class="hero-readout"><div class="channel-name">MC3 · RAW ADC</div><div class="adc-number" id="heroAdc3">--</div><div class="adc-unit">GPIO 32 · 12-bit ADC</div></div>
+      </div>
+    </div>
+  </section>
   <div class="stats">
     <div class="card">
       <div class="stat-label">ACTIVE CHANNELS</div>
@@ -536,6 +573,27 @@ input[type=checkbox] {accent-color:var(--green)}
 
   </div>
 
+  <section class="chart-grid" aria-label="Additional scientific signal graphs">
+    <div class="card chart-card">
+      <div class="section-title">AC-COUPLED CHANNEL COMPARISON</div>
+      <div class="small">Original ADC minus each channel's tracked baseline, on a shared time axis.</div>
+      <div class="chart-legend"><span class="legend-item"><i class="legend-line" style="background:var(--blue)"></i>MC1</span><span class="legend-item"><i class="legend-line" style="background:var(--gold)"></i>MC2</span><span class="legend-item"><i class="legend-line" style="background:var(--purple)"></i>MC3</span></div>
+      <canvas id="comparisonChart"></canvas>
+    </div>
+    <div class="card chart-card">
+      <div class="section-title">SIGNAL ENVELOPE / AMPLITUDE</div>
+      <div class="small">Absolute deviation from baseline, measured in ADC counts.</div>
+      <div class="chart-legend"><span class="legend-item"><i class="legend-line" style="background:var(--blue)"></i>MC1</span><span class="legend-item"><i class="legend-line" style="background:var(--gold)"></i>MC2</span><span class="legend-item"><i class="legend-line" style="background:var(--purple)"></i>MC3</span></div>
+      <canvas id="amplitudeChart"></canvas>
+    </div>
+    <div class="card chart-card" style="grid-column:1/-1">
+      <div class="section-title">INDEPENDENT HEART-RATE TREND</div>
+      <div class="small">Plots only measured S1-to-S1 BPM values; no placeholder values are generated.</div>
+      <div class="chart-legend"><span class="legend-item"><i class="legend-line" style="background:var(--blue)"></i>MC1 BPM</span><span class="legend-item"><i class="legend-line" style="background:var(--gold)"></i>MC2 BPM</span><span class="legend-item"><i class="legend-line" style="background:var(--purple)"></i>MC3 BPM</span></div>
+      <canvas id="bpmChart"></canvas>
+    </div>
+  </section>
+
   <!-- CHANNEL VOLUME -->
 
   <div class="section-title">CHANNEL GAIN / AUDIO MIXER</div>
@@ -633,6 +691,10 @@ let channels = [
 let latest = [2048,2048,2048];
 let baselines = [2048,2048,2048];
 let peaks = [0,0,0];
+const HISTORY_LIMIT = 1200;
+let comparisonHistory = [];
+let amplitudeHistory = [];
+let bpmHistory = [[],[],[]];
 
 // Heart-sound detector state. All event times are derived from the 2 kHz sample clock.
 let sampleClock = 0;
@@ -855,6 +917,11 @@ function processSample(values) {
   document.getElementById("value1").textContent = values[0];
   document.getElementById("value2").textContent = values[1];
   document.getElementById("value3").textContent = values[2];
+  for (let i=0;i<3;i++) document.getElementById("heroAdc"+(i+1)).textContent = values[i];
+  comparisonHistory.push(values.map((v,i)=>v-baselines[i]));
+  amplitudeHistory.push(values.map((v,i)=>Math.abs(v-baselines[i])));
+  if(comparisonHistory.length>HISTORY_LIMIT)comparisonHistory.shift();
+  if(amplitudeHistory.length>HISTORY_LIMIT)amplitudeHistory.shift();
 
   detectHeartSounds(values);
 
@@ -950,6 +1017,8 @@ function registerChannelPeak(channel, atSample) {
       const interval = sinceS1;
       if (interval >= 0.30 && interval <= 2.0) {
         d.bpm = 60 / interval;
+        bpmHistory[channel].push({t:sampleClock/SAMPLE_RATE,value:d.bpm});
+        if(bpmHistory[channel].length>180)bpmHistory[channel].shift();
       } else {
         d.bpm = null;
       }
@@ -971,6 +1040,7 @@ function registerChannelPeak(channel, atSample) {
       return;
     }
   }
+  if(label === 'S1') triggerHeartPulse(channel);
   addChannelSoundEvent(channel, label, atSample);
 }
 
@@ -1041,92 +1111,63 @@ function volume(i) {
 // DRAW WAVEFORMS
 // =============================================
 
-function drawWave(canvasId, data, color) {
-
-  const canvas = document.getElementById(canvasId);
-  const rect = canvas.getBoundingClientRect();
-
-  const dpr = window.devicePixelRatio || 1;
-
-  if (canvas.width !== Math.round(rect.width*dpr) ||
-      canvas.height !== Math.round(rect.height*dpr)) {
-
-    canvas.width = Math.round(rect.width*dpr);
-    canvas.height = Math.round(rect.height*dpr);
-  }
-
-  const ctx = canvas.getContext("2d");
-
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-
-  const w = rect.width;
-  const h = rect.height;
-
-  ctx.fillStyle = "#0a1422";
-  ctx.fillRect(0,0,w,h);
-
-  // Grid
-  ctx.strokeStyle = "#1c3048";
-  ctx.lineWidth = 1;
-
-  for (let i=0;i<=8;i++) {
-
-    const x = i*w/8;
-
-    ctx.beginPath();
-    ctx.moveTo(x,0);
-    ctx.lineTo(x,h);
-    ctx.stroke();
-  }
-
-  for (let i=0;i<=4;i++) {
-
-    const y = i*h/4;
-
-    ctx.beginPath();
-    ctx.moveTo(0,y);
-    ctx.lineTo(w,y);
-    ctx.stroke();
-  }
-
-  // Draw raw ADC signal
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.7;
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-
-  const middle = h/2;
-  const scale = h/2.2;
-
-  for (let i=0;i<data.length;i++) {
-
-    const x = i*w/(data.length-1);
-    const y = middle - ((data[i]-2048)/2048)*scale;
-
-    if (i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
-  }
-
-  ctx.stroke();
-
-  // Center baseline
-  ctx.strokeStyle = "#52657c";
-  ctx.setLineDash([4,5]);
-
-  ctx.beginPath();
-  ctx.moveTo(0,middle);
-  ctx.lineTo(w,middle);
-  ctx.stroke();
-
-  ctx.setLineDash([]);
+function drawWave(canvasId,data,color){
+  const canvas=document.getElementById(canvasId),r=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  const w=Math.max(10,r.width),h=Math.max(10,r.height);
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+  const c=canvas.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle="#0a1422";c.fillRect(0,0,w,h);
+  const p={l:45,r:12,t:12,b:24},pw=w-p.l-p.r,ph=h-p.t-p.b;
+  c.strokeStyle="#1c3048";c.fillStyle="#8496ae";c.font="10px Segoe UI,Arial";
+  for(let i=0;i<=4;i++){let y=p.t+ph*i/4;c.beginPath();c.moveTo(p.l,y);c.lineTo(w-p.r,y);c.stroke();c.fillText(String(Math.round(4095-i*4095/4)),3,y+3);}
+  for(let i=0;i<=6;i++){let x=p.l+pw*i/6;c.beginPath();c.moveTo(x,p.t);c.lineTo(x,h-p.b);c.stroke();}
+  if(data.length<2)return;
+  const step=Math.max(1,Math.floor(data.length/1100)),pts=[];for(let i=0;i<data.length;i+=step)pts.push({i,v:data[i]});
+  const yFor=v=>p.t+(4095-v)/4095*ph;
+  c.save();c.globalAlpha=.5;c.strokeStyle=color;c.lineWidth=1;c.beginPath();
+  pts.forEach((pt,j)=>{let x=p.l+j/(pts.length-1)*pw,y=yFor(pt.v);if(j===0)c.moveTo(x,y);else c.lineTo(x,y);});c.stroke();c.restore();
+  c.strokeStyle="#f4f7ff";c.lineWidth=1.8;c.beginPath();
+  pts.forEach((pt,j)=>{let sum=0,n=0;for(let k=Math.max(0,pt.i-10);k<=Math.min(data.length-1,pt.i+10);k++){sum+=data[k];n++;}let x=p.l+j/(pts.length-1)*pw,y=yFor(sum/n);if(j===0)c.moveTo(x,y);else c.lineTo(x,y);});c.stroke();
+  c.fillStyle=color;c.fillText("RAW ADC",p.l+4,h-7);c.fillStyle="#f4f7ff";c.fillText("21-sample moving average",p.l+72,h-7);
 }
 
-function render() {
+function triggerHeartPulse(channel){
+  const heart=document.getElementById("heartVisual");
+  heart.classList.remove("pulse"); void heart.offsetWidth; heart.classList.add("pulse");
+  document.getElementById("heartAnimationStatus").textContent="S1 detected on MC"+(channel+1)+" · "+(sampleClock/SAMPLE_RATE).toFixed(2)+" s";
+}
+function drawHistory(canvasId,rows,kind){
+  const canvas=document.getElementById(canvasId),r=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  const w=Math.max(10,r.width),h=Math.max(10,r.height);
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+  const c=canvas.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle="#0a1422";c.fillRect(0,0,w,h);
+  const p={l:42,r:12,t:12,b:23},pw=w-p.l-p.r,ph=h-p.t-p.b;
+  c.strokeStyle="#1c3048";c.fillStyle="#8496ae";c.font="10px Segoe UI,Arial";
+  for(let i=0;i<=4;i++){let y=p.t+ph*i/4;c.beginPath();c.moveTo(p.l,y);c.lineTo(w-p.r,y);c.stroke();}
+  for(let i=0;i<=6;i++){let x=p.l+pw*i/6;c.beginPath();c.moveTo(x,p.t);c.lineTo(x,h-p.b);c.stroke();}
+  if(kind==="bpm"){
+    const all=bpmHistory.flat();if(!all.length){c.fillText("Waiting for valid S1-to-S1 intervals…",p.l+10,h/2);return;}
+    let lo=Math.min(40,...all.map(v=>v.value)),hi=Math.max(160,...all.map(v=>v.value));if(hi-lo<10){lo-=5;hi+=5;}
+    const t0=Math.min(...all.map(v=>v.t)),span=Math.max(1,Math.max(...all.map(v=>v.t))-t0);
+    c.fillText(Math.round(hi)+" BPM",3,p.t+8);c.fillText(Math.round(lo)+" BPM",3,h-p.b);
+    bpmHistory.forEach((series,k)=>{if(!series.length)return;c.beginPath();c.strokeStyle=colors[k];c.lineWidth=2;series.forEach((v,j)=>{let x=p.l+(v.t-t0)/span*pw,y=p.t+(hi-v.value)/(hi-lo)*ph;if(j===0)c.moveTo(x,y);else c.lineTo(x,y);});c.stroke();});
+    return;
+  }
+  if(!rows.length){c.fillText("Waiting for live ADC samples…",p.l+10,h/2);return;}
+  let lo=Infinity,hi=-Infinity;rows.forEach(row=>row.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);}));
+  if(kind==="amplitude"){lo=0;hi=Math.max(30,hi*1.1);}else{let m=Math.max(Math.abs(lo),Math.abs(hi),10);lo=-m;hi=m;}
+  for(let i=0;i<3;i++){c.fillText(Math.round(hi-(hi-lo)*i/4),3,p.t+ph*i/4+3);}
+  colors.forEach((color,k)=>{c.beginPath();c.strokeStyle=color;c.lineWidth=1.7;rows.forEach((row,j)=>{let x=p.l+(j/(rows.length-1||1))*pw,y=p.t+(hi-row[k])/(hi-lo)*ph;if(j===0)c.moveTo(x,y);else c.lineTo(x,y);});c.stroke();});
+}
 
-  drawWave("wave1",channels[0],colors[0]);
-  drawWave("wave2",channels[1],colors[1]);
-  drawWave("wave3",channels[2],colors[2]);
-
+let lastGraphRender=0;
+function render(now=0){
+  if(now-lastGraphRender>66){
+    drawWave("wave1",channels[0],colors[0]);drawWave("wave2",channels[1],colors[1]);drawWave("wave3",channels[2],colors[2]);
+    drawHistory("comparisonChart",comparisonHistory,"comparison");
+    drawHistory("amplitudeChart",amplitudeHistory,"amplitude");
+    drawHistory("bpmChart",[],"bpm");
+    lastGraphRender=now;
+  }
   requestAnimationFrame(render);
 }
 
