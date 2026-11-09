@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32 3-Channel Heart Sound Monitor</title>
+<style>
+:root{color-scheme:dark;--bg:#07111f;--panel:#112238;--line:#29415c;--muted:#a8b8ca;--pink:#ff6f9f;--cyan:#58d8e8;--gold:#ffc36d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17314c,#07111f 65%);color:#f2f7ff;font:15px system-ui,Segoe UI,Arial}
+main{max-width:1150px;margin:auto;padding:24px 16px 50px}header{text-align:center;margin:0 0 22px}h1{font-size:clamp(22px,4vw,34px);margin:0 0 6px;letter-spacing:.04em}p{color:var(--muted);line-height:1.5}
+.panel{background:linear-gradient(145deg,#14283e,#0c1a2b);border:1px solid var(--line);border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0004}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button{border:1px solid #42627e;border-radius:10px;padding:11px 15px;background:#1b3855;color:white;font-weight:700;cursor:pointer}button.primary{background:#087f91;border-color:#20b8c6}button:disabled{opacity:.45;cursor:not-allowed}
+#status{margin-left:auto;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.channel{background:#081625;border:1px solid var(--line);border-radius:13px;padding:13px;min-width:0}.channel h3{margin:0 0 9px;font-size:15px}.channel canvas{display:block;width:100%;height:160px;background:#040d17;border-radius:8px}
+.values{display:flex;justify-content:space-between;gap:8px;margin-top:9px;font:12px ui-monospace,monospace;color:var(--muted)}.digital{font-weight:800}.on{color:#70e6a3}.off{color:#ff9a9a}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#081625;border:1px solid var(--line);border-radius:11px;padding:12px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:21px}
+.note{font-size:13px}.pill{display:inline-block;border:1px solid var(--line);border-radius:30px;padding:4px 9px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}#status{width:100%;margin:4px 0 0}}
+</style>
+</head>
+<body><main>
+<header><h1>ESP32 HEART SOUND MONITOR</h1><p>Three microphones · Analog waveform + digital threshold status</p></header>
+
+<section class="panel">
+<h2>Connection</h2>
+<div class="controls">
+<button class="primary" id="usbBtn">Connect USB</button>
+<button id="btBtn">Connect Bluetooth</button>
+<button id="disconnectBtn" disabled>Disconnect</button>
+<span id="status">Not connected</span>
+</div>
+<p class="note">USB: use Chrome or Edge and select the ESP32 USB COM port. Bluetooth: pair ESP32-HEART-3CH in Windows, start the Python bridge on the Bluetooth outgoing COM port, then click Connect Bluetooth. Open this page directly over HTTPS; Google Sites embedded mode may block serial access.</p>
+</section>
+
+<section class="panel">
+<h2>Live microphone signals</h2>
+<div class="grid">
+<div class="channel"><h3 style="color:var(--pink)">MIC 1 · LEFT</h3><canvas id="wave1" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a1">—</b></span><span>DO: <b id="d1" class="digital">—</b></span></div></div>
+<div class="channel"><h3 style="color:var(--cyan)">MIC 2 · CENTRE</h3><canvas id="wave2" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a2">—</b></span><span>DO: <b id="d2" class="digital">—</b></span></div></div>
+<div class="channel"><h3 style="color:var(--gold)">MIC 3 · RIGHT</h3><canvas id="wave3" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a3">—</b></span><span>DO: <b id="d3" class="digital">—</b></span></div></div>
+</div>
+</section>
+
+<section class="panel">
+<div class="stats">
+<div class="stat"><small>CSV ROWS RECEIVED</small><strong id="rows">0</strong></div>
+<div class="stat"><small>DATA RATE</small><strong id="rate">0 rows/s</strong></div>
+<div class="stat"><small>CONNECTION</small><strong id="mode">—</strong></div>
+</div>
+<p class="note">BPM is not calculated by this CSV viewer. It will remain “--” until a validated heart-sound detector is implemented; no fixed BPM is fabricated.</p>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvases=[$('wave1'),$('wave2'),$('wave3')];
+const colors=['#ff6f9f','#58d8e8','#ffc36d'];
+const SIZE=720, buffers=[new Float32Array(SIZE),new Float32Array(SIZE),new Float32Array(SIZE)];
+let cursor=0, rows=0, active=false, serialPort=null, serialReader=null, socket=null;
+let textBuffer='', lastRate=performance.now(), lastRows=0;
+
+function setStatus(s){$('status').textContent=s}
+function addCsvLine(line){
+  const p=line.trim().split(',');
+  if(p.length!==6)return;
+  const v=p.map(x=>Number(x.trim()));
+  if(v.some(x=>!Number.isFinite(x)))return;
+  for(let i=0;i<3;i++){
+    const analog=Math.max(0,Math.min(4095,v[i*2]));
+    const digital=v[i*2+1] ? 1:0;
+    buffers[i][cursor]=analog;
+    $('a'+(i+1)).textContent=analog;
+    const d=$('d'+(i+1));d.textContent=digital?'HIGH':'LOW';d.className='digital '+(digital?'on':'off');
+  }
+  cursor=(cursor+1)%SIZE;rows++;$('rows').textContent=rows.toLocaleString();
+}
+function receiveText(s){
+  textBuffer+=s;
+  if(textBuffer.length>20000)textBuffer=textBuffer.slice(-5000);
+  const lines=textBuffer.split(/\r?\n/);textBuffer=lines.pop();
+  for(const line of lines)addCsvLine(line);
+}
+function draw(){
+  canvases.forEach((cv,i)=>{
+    const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='#20384f';ctx.lineWidth=1;
+    for(let n=1;n<4;n++){ctx.beginPath();ctx.moveTo(0,n*h/4);ctx.lineTo(w,n*h/4);ctx.stroke()}
+    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath();
+    for(let x=0;x<w;x++){
+      const val=buffers[i][(cursor+x)%SIZE];
+      const y=h-(val/4095)*h;
+      if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }ctx.stroke();
+  });
+  const now=performance.now();
+  if(now-lastRate>=1000){$('rate').textContent=Math.round((rows-lastRows)*1000/(now-lastRate))+' rows/s';lastRows=rows;lastRate=now}
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+async function disconnect(){
+  active=false;
+  try{if(serialReader){await serialReader.cancel();serialReader.releaseLock();serialReader=null}}catch(e){}
+  try{if(serialPort){await serialPort.close();serialPort=null}}catch(e){}
+  try{if(socket){socket.close();socket=null}}catch(e){}
+  $('usbBtn').disabled=false;$('btBtn').disabled=false;$('disconnectBtn').disabled=true;
+  $('mode').textContent='—';setStatus('Disconnected');
+}
+$('disconnectBtn').onclick=disconnect;
+
+$('usbBtn').onclick=async()=>{
+  if(!('serial' in navigator)){setStatus('Web Serial unavailable. Open in Chrome/Edge using HTTPS.');return}
+  try{
+    serialPort=await navigator.serial.requestPort();
+    await serialPort.open({baudRate:115200});
+    active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;
+    $('mode').textContent='USB';setStatus('USB connected — receiving CSV');
+    const decoder=new TextDecoderStream();
+    const closed=serialPort.readable.pipeTo(decoder.writable);
+    serialReader=decoder.readable.getReader();
+    while(active){
+      const {value,done}=await serialReader.read();
+      if(done)break;
+      if(value)receiveText(value);
+    }
+    await closed.catch(()=>{});
+  }catch(e){setStatus('USB error: '+e.message);await disconnect()}
+};
+
+$('btBtn').onclick=()=>{
+  socket=new WebSocket('ws://127.0.0.1:8765');
+  socket.binaryType='arraybuffer';
+  socket.onopen=()=>{active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;$('mode').textContent='Bluetooth';setStatus('Bluetooth bridge connected')};
+  socket.onmessage=e=>receiveText(new TextDecoder().decode(e.data));
+  socket.onerror=()=>setStatus('Cannot reach Bluetooth bridge. Start bridge.py on this laptop.');
+  socket.onclose=()=>{if(active)disconnect()};
+};
+</script></body></html>
