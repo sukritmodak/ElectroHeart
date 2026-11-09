@@ -1,12 +1,12 @@
 /*
-  ElectroHeart - 3-channel ESP32 USB waveform streamer
+  ElectroHeart - 3-channel ESP32 USB + Bluetooth SPP waveform streamer
   Board: classic ESP32 / ESP32-WROOM
   Inputs:
     Channel 1: GPIO34 (ADC1)
     Channel 2: GPIO35 (ADC1)
     Channel 3: GPIO32 (ADC1)
 
-  USB serial protocol (must match the website):
+  USB Serial AND Bluetooth Classic SPP send the same binary protocol:
     Baud: 921600
     Packet: 8 bytes
       [0] 0xA5
@@ -17,6 +17,7 @@
 
   IMPORTANT:
   - Upload this sketch to the ESP32.
+  - Pair Bluetooth device ESP32-ElectroHeart in Windows first; choose its OUTGOING Bluetooth COM port in Chrome/Edge.
   - Close Arduino Serial Monitor/Plotter before connecting the website.
   - Do not add Serial.print()/Serial.println() while binary streaming.
   - Connect microphone amplifier OUT pins to the listed ADC pins.
@@ -24,6 +25,9 @@
 */
 
 #include <Arduino.h>
+#include <BluetoothSerial.h>
+
+BluetoothSerial SerialBT;
 
 static const uint32_t SERIAL_BAUD = 921600;
 static const uint32_t SAMPLE_RATE_HZ = 2000;
@@ -42,6 +46,7 @@ static inline void putU16LE(uint8_t *buffer, uint8_t index, uint16_t value) {
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
+  SerialBT.begin("ESP32-ElectroHeart");
 
   analogReadResolution(12);
   analogSetPinAttenuation(MIC1_PIN, ADC_11db);
@@ -80,5 +85,9 @@ void loop() {
   putU16LE(packet, 4, ch2);
   putU16LE(packet, 6, ch3);
 
+  // Send identical frames over USB and Bluetooth Classic SPP.
   Serial.write(packet, sizeof(packet));
+  if (SerialBT.hasClient()) {
+    SerialBT.write(packet, sizeof(packet));
+  }
 }
