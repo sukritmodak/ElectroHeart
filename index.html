@@ -305,6 +305,8 @@ input[type=checkbox] {accent-color:var(--green)}
   <div class="toolbar">
     <button class="primary" id="connectBtn">CONNECT USB / BLUETOOTH</button>
     <button id="disconnectBtn" disabled>DISCONNECT</button>
+    <button id="graphPauseBtn" class="recording" type="button" aria-pressed="false">Ⅱ PAUSE ALL GRAPHS</button>
+    <span id="graphPauseStatus" class="small" role="status" aria-live="polite">Graphs running</span>
     <button id="recordBtn">● START RECORDING</button>
     <button id="exportBtn">EXPORT CSV</button>
   </div>
@@ -1160,8 +1162,23 @@ function drawHistory(canvasId,rows,kind){
 }
 
 let lastGraphRender=0;
+let graphsPaused = false;
+const graphPauseBtn = document.getElementById("graphPauseBtn");
+const graphPauseStatus = document.getElementById("graphPauseStatus");
+
+graphPauseBtn.addEventListener("click", () => {
+  graphsPaused = !graphsPaused;
+  graphPauseBtn.textContent = graphsPaused ? "▶ RESUME ALL GRAPHS" : "Ⅱ PAUSE ALL GRAPHS";
+  graphPauseBtn.classList.toggle("recording", graphsPaused);
+  graphPauseBtn.classList.toggle("primary", !graphsPaused);
+  graphPauseBtn.setAttribute("aria-pressed", String(graphsPaused));
+  graphPauseStatus.textContent = graphsPaused
+    ? "Graphs paused · incoming sensor data continues"
+    : "Graphs running · live updates resumed";
+});
+
 function render(now=0){
-  if(now-lastGraphRender>66){
+  if(!graphsPaused && now-lastGraphRender>66){
     drawWave("wave1",channels[0],colors[0]);drawWave("wave2",channels[1],colors[1]);drawWave("wave3",channels[2],colors[2]);
     drawHistory("comparisonChart",comparisonHistory,"comparison");
     drawHistory("amplitudeChart",amplitudeHistory,"amplitude");
