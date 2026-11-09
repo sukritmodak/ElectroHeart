@@ -1,139 +1,1135 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ESP32 3-Channel Heart Sound Monitor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardiac Acoustic Monitor | 3 Channel</title>
+
 <style>
-:root{color-scheme:dark;--bg:#07111f;--panel:#112238;--line:#29415c;--muted:#a8b8ca;--pink:#ff6f9f;--cyan:#58d8e8;--gold:#ffc36d}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17314c,#07111f 65%);color:#f2f7ff;font:15px system-ui,Segoe UI,Arial}
-main{max-width:1150px;margin:auto;padding:24px 16px 50px}header{text-align:center;margin:0 0 22px}h1{font-size:clamp(22px,4vw,34px);margin:0 0 6px;letter-spacing:.04em}p{color:var(--muted);line-height:1.5}
-.panel{background:linear-gradient(145deg,#14283e,#0c1a2b);border:1px solid var(--line);border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0004}
-.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button{border:1px solid #42627e;border-radius:10px;padding:11px 15px;background:#1b3855;color:white;font-weight:700;cursor:pointer}button.primary{background:#087f91;border-color:#20b8c6}button:disabled{opacity:.45;cursor:not-allowed}
-#status{margin-left:auto;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
-.channel{background:#081625;border:1px solid var(--line);border-radius:13px;padding:13px;min-width:0}.channel h3{margin:0 0 9px;font-size:15px}.channel canvas{display:block;width:100%;height:160px;background:#040d17;border-radius:8px}
-.values{display:flex;justify-content:space-between;gap:8px;margin-top:9px;font:12px ui-monospace,monospace;color:var(--muted)}.digital{font-weight:800}.on{color:#70e6a3}.off{color:#ff9a9a}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#081625;border:1px solid var(--line);border-radius:11px;padding:12px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:21px}
-.note{font-size:13px}.pill{display:inline-block;border:1px solid var(--line);border-radius:30px;padding:4px 9px;color:var(--muted);font-size:12px}
-@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}#status{width:100%;margin:4px 0 0}}
+:root {
+  --bg:#080e19;
+  --panel:#101b2b;
+  --panel2:#142238;
+  --line:#24344b;
+  --text:#eaf2ff;
+  --muted:#8496ae;
+  --blue:#36a9ff;
+  --gold:#e5b34c;
+  --purple:#b78bff;
+  --green:#36d6a0;
+  --red:#ff6378;
+}
+
+* {box-sizing:border-box}
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+
+header {
+  padding:20px 4%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+  gap:15px;
+}
+
+.brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-icon {
+  width:43px;height:43px;
+  background:#172e48;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  color:#ff647a;
+  font-size:25px;
+}
+
+h1 {font-size:20px;margin:0}
+.subtitle {color:var(--muted);font-size:11px;margin-top:5px;letter-spacing:1px}
+
+.status {
+  display:flex;align-items:center;gap:8px;
+  color:var(--muted);font-size:12px;
+}
+
+.dot {
+  width:9px;height:9px;border-radius:50%;
+  background:var(--red);
+}
+
+.dot.connected {background:var(--green);box-shadow:0 0 10px var(--green)}
+
+main {
+  width:min(1450px,94%);
+  margin:25px auto 50px;
+}
+
+.toolbar {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+button,select {
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--line);
+  padding:11px 16px;
+  border-radius:9px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+button:hover {border-color:var(--blue)}
+button:disabled {opacity:.4;cursor:not-allowed}
+
+.primary {
+  background:#1265a4;
+  border-color:#2588d3;
+}
+
+.recording {background:#692538;border-color:#ff6378}
+
+.card {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:18px;
+  min-width:0;
+}
+
+.section-title {
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1px;
+  margin-bottom:14px;
+}
+
+.muted {color:var(--muted)}
+.small {font-size:11px;color:var(--muted)}
+
+.stats {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:13px;
+  margin-bottom:18px;
+}
+
+.stat-value {
+  font-size:25px;
+  font-weight:700;
+  margin-top:9px;
+}
+
+.stat-label {
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:1px;
+}
+
+.anatomy-layout {
+  display:grid;
+  grid-template-columns:1fr 1.15fr 1fr;
+  gap:14px;
+  margin-bottom:18px;
+  align-items:stretch;
+}
+
+.position {
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.position h3 {font-size:14px;margin:7px 0}
+.position .number {font-size:11px;color:var(--muted)}
+
+.position-indicator {
+  width:13px;height:13px;
+  border-radius:50%;
+  margin:8px;
+}
+
+.body-illustration {
+  width:100%;
+  max-width:310px;
+  height:275px;
+}
+
+.wave-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.wave-card {padding:16px 18px}
+
+.wave-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.wave-title {
+  display:flex;align-items:center;gap:9px;
+  font-weight:700;font-size:13px;
+}
+
+.wave-dot {
+  width:9px;height:9px;border-radius:50%;
+}
+
+canvas {
+  width:100%;
+  height:145px;
+  display:block;
+  background:#0a1422;
+  border-radius:9px;
+}
+
+.channel-controls {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:13px;
+  margin-bottom:18px;
+}
+
+.channel-box {
+  background:var(--panel);
+  border:1px solid var(--line);
+  padding:17px;
+  border-radius:13px;
+}
+
+.channel-box h3 {font-size:13px;margin:0 0 13px}
+
+input[type=range] {width:100%;accent-color:var(--blue)}
+
+.audio-section {margin-bottom:18px}
+
+.audio-options {
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin:12px 0;
+}
+
+.audio-options button.active {
+  border-color:var(--green);
+  background:#164538;
+}
+
+.audio-row {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+input[type=checkbox] {accent-color:var(--green)}
+
+.footer-note {
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  padding:20px;
+  line-height:1.7;
+}
+
+@media(max-width:750px) {
+  .stats {grid-template-columns:repeat(2,1fr)}
+  .anatomy-layout {grid-template-columns:1fr}
+  .body-illustration {height:230px}
+  .channel-controls {grid-template-columns:1fr}
+  header {align-items:flex-start}
+}
 </style>
 </head>
-<body><main>
-<header><h1>ESP32 HEART SOUND MONITOR</h1><p>Three microphones · Analog waveform + digital threshold status</p></header>
 
-<section class="panel">
-<h2>Connection</h2>
-<div class="controls">
-<button class="primary" id="usbBtn">Connect USB</button>
-<button id="btBtn">Connect Bluetooth</button>
-<button id="disconnectBtn" disabled>Disconnect</button>
-<span id="status">Not connected</span>
-</div>
-<p class="note">USB: use Chrome or Edge and select the ESP32 USB COM port. Bluetooth: pair ESP32-HEART-3CH in Windows, start the Python bridge on the Bluetooth outgoing COM port, then click Connect Bluetooth. Open this page directly over HTTPS; Google Sites embedded mode may block serial access.</p>
-</section>
+<body>
 
-<section class="panel">
-<h2>Live microphone signals</h2>
-<div class="grid">
-<div class="channel"><h3 style="color:var(--pink)">MIC 1 · LEFT</h3><canvas id="wave1" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a1">—</b></span><span>DO: <b id="d1" class="digital">—</b></span></div></div>
-<div class="channel"><h3 style="color:var(--cyan)">MIC 2 · CENTRE</h3><canvas id="wave2" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a2">—</b></span><span>DO: <b id="d2" class="digital">—</b></span></div></div>
-<div class="channel"><h3 style="color:var(--gold)">MIC 3 · RIGHT</h3><canvas id="wave3" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a3">—</b></span><span>DO: <b id="d3" class="digital">—</b></span></div></div>
-</div>
-</section>
+<header>
+  <div class="brand">
+    <div class="brand-icon">♥</div>
+    <div>
+      <h1>CARDIAC ACOUSTIC MONITOR</h1>
+      <div class="subtitle">ESP32 · THREE CHANNEL HEART SOUND ANALYSIS</div>
+    </div>
+  </div>
 
-<section class="panel">
-<div class="stats">
-<div class="stat"><small>CSV ROWS RECEIVED</small><strong id="rows">0</strong></div>
-<div class="stat"><small>DATA RATE</small><strong id="rate">0 rows/s</strong></div>
-<div class="stat"><small>CONNECTION</small><strong id="mode">—</strong></div>
-</div>
-<p class="note">BPM is not calculated by this CSV viewer. It will remain “--” until a validated heart-sound detector is implemented; no fixed BPM is fabricated.</p>
-</section>
+  <div class="status">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">ESP32 DISCONNECTED</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="toolbar">
+    <button class="primary" id="connectBtn">CONNECT ESP32</button>
+    <button id="disconnectBtn" disabled>DISCONNECT</button>
+    <button id="recordBtn">● START RECORDING</button>
+    <button id="exportBtn">EXPORT CSV</button>
+  </div>
+
+  <div class="stats">
+    <div class="card">
+      <div class="stat-label">ACTIVE CHANNELS</div>
+      <div class="stat-value">3 / 3</div>
+      <div class="small">Analog microphone inputs</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">TARGET SAMPLE RATE</div>
+      <div class="stat-value">2,000 <span class="small">Hz</span></div>
+      <div class="small">Per channel</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">RECEIVED FRAMES</div>
+      <div class="stat-value" id="frames">0</div>
+      <div class="small">Actual received packets</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">RECORDING TIME</div>
+      <div class="stat-value" id="recordTime">00:00</div>
+      <div class="small" id="recordStatus">Not recording</div>
+    </div>
+  </div>
+
+  <!-- ANATOMICAL POSITION DISPLAY -->
+
+  <div class="card" style="margin-bottom:18px">
+
+    <div class="section-title">THREE-POSITION CARDIAC MONITORING</div>
+
+    <div class="anatomy-layout">
+
+      <div class="position">
+        <div class="position-indicator" style="background:var(--blue)"></div>
+        <h3 style="color:var(--blue)">MIC 1 · LEFT</h3>
+        <div class="number">LEFT CHEST CHANNEL</div>
+        <div class="stat-value" id="value1">--</div>
+        <div class="small">ADC amplitude</div>
+      </div>
+
+      <div class="position">
+
+        <svg class="body-illustration" viewBox="0 0 300 290">
+          <defs>
+            <linearGradient id="bodyColor" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#263d5c"/>
+              <stop offset="100%" stop-color="#101b2b"/>
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Torso silhouette -->
+          <path d="M115 18
+                   Q150 35 185 18
+                   L215 42
+                   Q235 55 242 87
+                   L262 220
+                   Q220 260 150 260
+                   Q80 260 38 220
+                   L58 87
+                   Q65 55 85 42 Z"
+                fill="url(#bodyColor)"
+                stroke="#526d8d"
+                stroke-width="2"/>
+
+          <!-- Neck -->
+          <path d="M122 18 L122 48 Q150 62 178 48 L178 18"
+                fill="#263d5c" stroke="#526d8d" stroke-width="2"/>
+
+          <!-- Chest divisions -->
+          <path d="M150 65 L150 230"
+                stroke="#526d8d" stroke-dasharray="4 5" opacity=".6"/>
+
+          <!-- Lungs -->
+          <path d="M137 82 Q103 64 82 108 Q66 150 105 184
+                   Q131 177 139 140 Z"
+                fill="#244566" opacity=".8" stroke="#4a7299"/>
+
+          <path d="M163 82 Q197 64 218 108 Q234 150 195 184
+                   Q169 177 161 140 Z"
+                fill="#244566" opacity=".8" stroke="#4a7299"/>
+
+          <!-- Heart -->
+          <path d="M150 125
+                   C130 96 95 115 115 151
+                   L150 190
+                   L185 151
+                   C205 115 170 96 150 125 Z"
+                fill="#e74f6b"
+                stroke="#ff9aa8"
+                stroke-width="2"
+                filter="url(#glow)"/>
+
+          <!-- Position markers -->
+          <circle cx="112" cy="130" r="9" fill="#36a9ff"
+                  stroke="#fff" stroke-width="2"/>
+          <circle cx="150" cy="105" r="9" fill="#e5b34c"
+                  stroke="#fff" stroke-width="2"/>
+          <circle cx="188" cy="130" r="9" fill="#b78bff"
+                  stroke="#fff" stroke-width="2"/>
+
+          <!-- Labels -->
+          <text x="75" y="119" fill="#36a9ff" font-size="10">1</text>
+          <text x="147" y="88" fill="#e5b34c" font-size="10">2</text>
+          <text x="207" y="119" fill="#b78bff" font-size="10">3</text>
+        </svg>
+
+        <div class="small">ILLUSTRATIVE CHEST POSITION MAP</div>
+
+      </div>
+
+      <div class="position">
+        <div class="position-indicator" style="background:var(--purple)"></div>
+        <h3 style="color:var(--purple)">MIC 3 · RIGHT</h3>
+        <div class="number">RIGHT CHEST CHANNEL</div>
+        <div class="stat-value" id="value3">--</div>
+        <div class="small">ADC amplitude</div>
+      </div>
+
+    </div>
+
+    <div style="text-align:center;border-top:1px solid var(--line);padding-top:15px">
+      <span style="color:var(--gold);font-weight:bold">MIC 2 · CENTER</span>
+      <div class="stat-value" id="value2">--</div>
+      <div class="small">CENTRAL CHEST CHANNEL · ADC AMPLITUDE</div>
+    </div>
+
+  </div>
+
+  <!-- THREE LIVE WAVEFORMS -->
+
+  <div class="wave-grid">
+
+    <div class="card wave-card">
+      <div class="wave-head">
+        <div class="wave-title">
+          <span class="wave-dot" style="background:var(--blue)"></span>
+          MIC 1 · LEFT SIGNAL
+        </div>
+        <span class="small" id="peak1">Waiting for data</span>
+      </div>
+      <canvas id="wave1"></canvas>
+    </div>
+
+    <div class="card wave-card">
+      <div class="wave-head">
+        <div class="wave-title">
+          <span class="wave-dot" style="background:var(--gold)"></span>
+          MIC 2 · CENTER SIGNAL
+        </div>
+        <span class="small" id="peak2">Waiting for data</span>
+      </div>
+      <canvas id="wave2"></canvas>
+    </div>
+
+    <div class="card wave-card">
+      <div class="wave-head">
+        <div class="wave-title">
+          <span class="wave-dot" style="background:var(--purple)"></span>
+          MIC 3 · RIGHT SIGNAL
+        </div>
+        <span class="small" id="peak3">Waiting for data</span>
+      </div>
+      <canvas id="wave3"></canvas>
+    </div>
+
+  </div>
+
+  <!-- CHANNEL VOLUME -->
+
+  <div class="section-title">CHANNEL GAIN / AUDIO MIXER</div>
+
+  <div class="channel-controls">
+
+    <div class="channel-box">
+      <h3 style="color:var(--blue)">MIC 1 · LEFT</h3>
+      <label class="small">Volume: <span id="volLabel1">70</span>%</label>
+      <input type="range" id="vol1" min="0" max="100" value="70">
+    </div>
+
+    <div class="channel-box">
+      <h3 style="color:var(--gold)">MIC 2 · CENTER</h3>
+      <label class="small">Volume: <span id="volLabel2">70</span>%</label>
+      <input type="range" id="vol2" min="0" max="100" value="70">
+    </div>
+
+    <div class="channel-box">
+      <h3 style="color:var(--purple)">MIC 3 · RIGHT</h3>
+      <label class="small">Volume: <span id="volLabel3">70</span>%</label>
+      <input type="range" id="vol3" min="0" max="100" value="70">
+    </div>
+
+  </div>
+
+  <!-- AUDIO PLAYBACK -->
+
+  <div class="card audio-section">
+
+    <div class="section-title">LIVE HEART SOUND LISTENING</div>
+
+    <div class="small">Select a microphone to hear it independently, or combine all three channels.</div>
+
+    <div class="audio-options">
+      <button class="active" data-mode="1">MIC 1</button>
+      <button data-mode="2">MIC 2</button>
+      <button data-mode="3">MIC 3</button>
+      <button data-mode="all">ALL THREE CHANNELS</button>
+    </div>
+
+    <div class="audio-row">
+      <button class="primary" id="audioBtn">▶ START AUDIO</button>
+      <span class="small" id="audioStatus">Audio stopped</span>
+    </div>
+
+    <p class="small">
+      Use headphones at low volume initially. Audio is reconstructed from the
+      2 kHz analog sample stream and may sound limited in quality.
+    </p>
+
+  </div>
+
+  <div class="card">
+    <div class="section-title">ACQUISITION INFORMATION</div>
+    <div class="small" id="connectionInfo">
+      No ESP32 data received yet.
+    </div>
+  </div>
+
 </main>
 
+<div class="footer-note">
+  THREE-CHANNEL ACOUSTIC MONITORING SYSTEM<br>
+  Experimental biomedical signal acquisition prototype.<br>
+  Not intended for medical diagnosis.
+</div>
+
 <script>
-const $=id=>document.getElementById(id);
-const canvases=[$('wave1'),$('wave2'),$('wave3')];
-const colors=['#ff6f9f','#58d8e8','#ffc36d'];
-const SIZE=720, buffers=[new Float32Array(SIZE),new Float32Array(SIZE),new Float32Array(SIZE)];
-let cursor=0, rows=0, active=false, serialPort=null, serialReader=null, socket=null;
-let textBuffer='', lastRate=performance.now(), lastRows=0;
 
-function setStatus(s){$('status').textContent=s}
-function addCsvLine(line){
-  const p=line.trim().split(',');
-  if(p.length!==6)return;
-  const v=p.map(x=>Number(x.trim()));
-  if(v.some(x=>!Number.isFinite(x)))return;
-  for(let i=0;i<3;i++){
-    const analog=Math.max(0,Math.min(4095,v[i*2]));
-    const digital=v[i*2+1] ? 1:0;
-    buffers[i][cursor]=analog;
-    $('a'+(i+1)).textContent=analog;
-    const d=$('d'+(i+1));d.textContent=digital?'HIGH':'LOW';d.className='digital '+(digital?'on':'off');
+// =============================================
+// CONFIGURATION - MUST MATCH ESP32 FIRMWARE
+// =============================================
+
+const BAUD_RATE = 921600;
+const SAMPLE_RATE = 2000;
+const PACKET_SIZE = 8;
+
+let port = null;
+let reader = null;
+let connected = false;
+let recording = false;
+let recordStart = 0;
+let recordingRows = [];
+
+let totalFrames = 0;
+let selectedMode = "1";
+
+let channels = [
+  new Array(600).fill(2048),
+  new Array(600).fill(2048),
+  new Array(600).fill(2048)
+];
+
+let latest = [2048,2048,2048];
+let baselines = [2048,2048,2048];
+let peaks = [0,0,0];
+
+let parserBuffer = new Uint8Array(0);
+
+// Audio ring buffer
+const RING_SIZE = 65536;
+const audioRing = new Float32Array(RING_SIZE);
+
+let writeIndex = 0;
+let readPosition = 0;
+
+let audioContext = null;
+let audioNode = null;
+let audioRunning = false;
+
+const colors = [
+  "#36a9ff",
+  "#e5b34c",
+  "#b78bff"
+];
+
+// =============================================
+// CONNECT ESP32
+// =============================================
+
+document.getElementById("connectBtn").onclick = async () => {
+
+  if (!("serial" in navigator)) {
+    alert("Web Serial is not supported. Please use Chrome or Edge on your computer.");
+    return;
   }
-  cursor=(cursor+1)%SIZE;rows++;$('rows').textContent=rows.toLocaleString();
-}
-function receiveText(s){
-  textBuffer+=s;
-  if(textBuffer.length>20000)textBuffer=textBuffer.slice(-5000);
-  const lines=textBuffer.split(/\r?\n/);textBuffer=lines.pop();
-  for(const line of lines)addCsvLine(line);
-}
-function draw(){
-  canvases.forEach((cv,i)=>{
-    const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
-    ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle='#20384f';ctx.lineWidth=1;
-    for(let n=1;n<4;n++){ctx.beginPath();ctx.moveTo(0,n*h/4);ctx.lineTo(w,n*h/4);ctx.stroke()}
-    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath();
-    for(let x=0;x<w;x++){
-      const val=buffers[i][(cursor+x)%SIZE];
-      const y=h-(val/4095)*h;
-      if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-    }ctx.stroke();
-  });
-  const now=performance.now();
-  if(now-lastRate>=1000){$('rate').textContent=Math.round((rows-lastRows)*1000/(now-lastRate))+' rows/s';lastRows=rows;lastRate=now}
-  requestAnimationFrame(draw);
-}
-requestAnimationFrame(draw);
 
-async function disconnect(){
-  active=false;
-  try{if(serialReader){await serialReader.cancel();serialReader.releaseLock();serialReader=null}}catch(e){}
-  try{if(serialPort){await serialPort.close();serialPort=null}}catch(e){}
-  try{if(socket){socket.close();socket=null}}catch(e){}
-  $('usbBtn').disabled=false;$('btBtn').disabled=false;$('disconnectBtn').disabled=true;
-  $('mode').textContent='—';setStatus('Disconnected');
-}
-$('disconnectBtn').onclick=disconnect;
+  try {
 
-$('usbBtn').onclick=async()=>{
-  if(!('serial' in navigator)){setStatus('Web Serial unavailable. Open in Chrome/Edge using HTTPS.');return}
-  try{
-    serialPort=await navigator.serial.requestPort();
-    await serialPort.open({baudRate:115200});
-    active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;
-    $('mode').textContent='USB';setStatus('USB connected — receiving CSV');
-    const decoder=new TextDecoderStream();
-    const closed=serialPort.readable.pipeTo(decoder.writable);
-    serialReader=decoder.readable.getReader();
-    while(active){
-      const {value,done}=await serialReader.read();
-      if(done)break;
-      if(value)receiveText(value);
+    port = await navigator.serial.requestPort();
+
+    await port.open({
+      baudRate: BAUD_RATE,
+      bufferSize: 65536
+    });
+
+    connected = true;
+
+    document.getElementById("statusDot").classList.add("connected");
+    document.getElementById("statusText").textContent = "ESP32 CONNECTED";
+
+    document.getElementById("connectBtn").disabled = true;
+    document.getElementById("disconnectBtn").disabled = false;
+
+    document.getElementById("connectionInfo").textContent =
+      "Connected at " + BAUD_RATE +
+      " baud. Waiting for three-channel analog data.";
+
+    readSerial();
+
+  } catch (error) {
+    alert("Connection failed: " + error.message);
+  }
+};
+
+// =============================================
+// DISCONNECT
+// =============================================
+
+document.getElementById("disconnectBtn").onclick = async () => {
+
+  connected = false;
+
+  try {
+    if (reader) {
+      await reader.cancel();
     }
-    await closed.catch(()=>{});
-  }catch(e){setStatus('USB error: '+e.message);await disconnect()}
+  } catch(e) {}
+
+  try {
+    if (port) await port.close();
+  } catch(e) {}
+
+  reader = null;
+  port = null;
+
+  document.getElementById("statusDot").classList.remove("connected");
+  document.getElementById("statusText").textContent = "ESP32 DISCONNECTED";
+
+  document.getElementById("connectBtn").disabled = false;
+  document.getElementById("disconnectBtn").disabled = true;
 };
 
-$('btBtn').onclick=()=>{
-  socket=new WebSocket('ws://127.0.0.1:8765');
-  socket.binaryType='arraybuffer';
-  socket.onopen=()=>{active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;$('mode').textContent='Bluetooth';setStatus('Bluetooth bridge connected')};
-  socket.onmessage=e=>receiveText(new TextDecoder().decode(e.data));
-  socket.onerror=()=>setStatus('Cannot reach Bluetooth bridge. Start bridge.py on this laptop.');
-  socket.onclose=()=>{if(active)disconnect()};
+// =============================================
+// READ SERIAL STREAM
+// =============================================
+
+async function readSerial() {
+
+  if (!port) return;
+
+  reader = port.readable.getReader();
+
+  try {
+
+    while (connected) {
+
+      const result = await reader.read();
+
+      if (result.done) break;
+
+      if (result.value) {
+        processBytes(result.value);
+      }
+    }
+
+  } catch(error) {
+
+    console.error(error);
+
+    if (connected) {
+      document.getElementById("connectionInfo").textContent =
+        "Serial error: " + error.message;
+    }
+
+  } finally {
+
+    try { reader.releaseLock(); } catch(e) {}
+    reader = null;
+  }
+}
+
+// =============================================
+// BINARY PACKET PARSER
+// FORMAT: A5 5A + 3 x UINT16
+// =============================================
+
+function processBytes(chunk) {
+
+  const combined = new Uint8Array(parserBuffer.length + chunk.length);
+
+  combined.set(parserBuffer);
+  combined.set(chunk, parserBuffer.length);
+
+  let offset = 0;
+
+  while (offset + PACKET_SIZE <= combined.length) {
+
+    if (combined[offset] !== 0xA5 ||
+        combined[offset+1] !== 0x5A) {
+
+      offset++;
+      continue;
+    }
+
+    const a = combined[offset+2] |
+              (combined[offset+3] << 8);
+
+    const b = combined[offset+4] |
+              (combined[offset+5] << 8);
+
+    const c = combined[offset+6] |
+              (combined[offset+7] << 8);
+
+    if (a > 4095 || b > 4095 || c > 4095) {
+      offset++;
+      continue;
+    }
+
+    processSample([a,b,c]);
+
+    offset += PACKET_SIZE;
+  }
+
+  parserBuffer = combined.slice(offset);
+
+  // Preserve at most a small incomplete packet tail
+  if (parserBuffer.length > 7) {
+    parserBuffer = parserBuffer.slice(-7);
+  }
+}
+
+// =============================================
+// PROCESS THREE ANALOG CHANNELS
+// =============================================
+
+function processSample(values) {
+
+  totalFrames++;
+
+  for (let i=0;i<3;i++) {
+
+    latest[i] = values[i];
+
+    channels[i].push(values[i]);
+
+    if (channels[i].length > 600) {
+      channels[i].shift();
+    }
+
+    // Estimate DC offset for audio
+    baselines[i] += 0.002 * (values[i] - baselines[i]);
+
+    peaks[i] = Math.max(
+      peaks[i] * 0.995,
+      Math.abs(values[i] - baselines[i])
+    );
+  }
+
+  document.getElementById("frames").textContent =
+    totalFrames.toLocaleString();
+
+  document.getElementById("value1").textContent = values[0];
+  document.getElementById("value2").textContent = values[1];
+  document.getElementById("value3").textContent = values[2];
+
+  document.getElementById("peak1").textContent =
+    "Peak: " + Math.round(peaks[0]);
+
+  document.getElementById("peak2").textContent =
+    "Peak: " + Math.round(peaks[1]);
+
+  document.getElementById("peak3").textContent =
+    "Peak: " + Math.round(peaks[2]);
+
+  // Send selected audio channel into ring buffer
+  if (audioRunning) {
+
+    let sample = 0;
+
+    if (selectedMode === "1") {
+      sample = normalized(0);
+    } else if (selectedMode === "2") {
+      sample = normalized(1);
+    } else if (selectedMode === "3") {
+      sample = normalized(2);
+    } else {
+      sample = (
+        normalized(0) * volume(0) +
+        normalized(1) * volume(1) +
+        normalized(2) * volume(2)
+      ) / 3;
+    }
+
+    audioRing[writeIndex % RING_SIZE] = sample;
+    writeIndex++;
+  }
+
+  if (recording) {
+
+    recordingRows.push([
+      totalFrames,
+      values[0],
+      values[1],
+      values[2]
+    ]);
+  }
+}
+
+function normalized(i) {
+
+  const gain = volume(i);
+
+  // Remove DC component
+  const sample = (latest[i] - baselines[i]) / 2048;
+
+  return sample * gain * 2.0;
+}
+
+function volume(i) {
+  return Number(document.getElementById("vol" + (i+1)).value) / 100;
+}
+
+// =============================================
+// DRAW WAVEFORMS
+// =============================================
+
+function drawWave(canvasId, data, color) {
+
+  const canvas = document.getElementById(canvasId);
+  const rect = canvas.getBoundingClientRect();
+
+  const dpr = window.devicePixelRatio || 1;
+
+  if (canvas.width !== Math.round(rect.width*dpr) ||
+      canvas.height !== Math.round(rect.height*dpr)) {
+
+    canvas.width = Math.round(rect.width*dpr);
+    canvas.height = Math.round(rect.height*dpr);
+  }
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const w = rect.width;
+  const h = rect.height;
+
+  ctx.fillStyle = "#0a1422";
+  ctx.fillRect(0,0,w,h);
+
+  // Grid
+  ctx.strokeStyle = "#1c3048";
+  ctx.lineWidth = 1;
+
+  for (let i=0;i<=8;i++) {
+
+    const x = i*w/8;
+
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,h);
+    ctx.stroke();
+  }
+
+  for (let i=0;i<=4;i++) {
+
+    const y = i*h/4;
+
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(w,y);
+    ctx.stroke();
+  }
+
+  // Draw raw ADC signal
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.7;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+
+  const middle = h/2;
+  const scale = h/2.2;
+
+  for (let i=0;i<data.length;i++) {
+
+    const x = i*w/(data.length-1);
+    const y = middle - ((data[i]-2048)/2048)*scale;
+
+    if (i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+
+  ctx.stroke();
+
+  // Center baseline
+  ctx.strokeStyle = "#52657c";
+  ctx.setLineDash([4,5]);
+
+  ctx.beginPath();
+  ctx.moveTo(0,middle);
+  ctx.lineTo(w,middle);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+}
+
+function render() {
+
+  drawWave("wave1",channels[0],colors[0]);
+  drawWave("wave2",channels[1],colors[1]);
+  drawWave("wave3",channels[2],colors[2]);
+
+  requestAnimationFrame(render);
+}
+
+render();
+
+// =============================================
+// VOLUME SLIDERS
+// =============================================
+
+for (let i=1;i<=3;i++) {
+
+  document.getElementById("vol"+i).addEventListener(
+    "input", function() {
+
+      document.getElementById("volLabel"+i).textContent =
+        this.value;
+    }
+  );
+}
+
+// =============================================
+// SELECT AUDIO CHANNEL
+// =============================================
+
+document.querySelectorAll("[data-mode]").forEach(button => {
+
+  button.onclick = () => {
+
+    selectedMode = button.dataset.mode;
+
+    document.querySelectorAll("[data-mode]").forEach(b => {
+      b.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    // Start with a fresh audio buffer after channel switching
+    readPosition = writeIndex;
+
+  };
+});
+
+// =============================================
+// WEB AUDIO PLAYBACK
+// =============================================
+
+document.getElementById("audioBtn").onclick = async () => {
+
+  try {
+
+    if (!audioContext) {
+
+      audioContext = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
+
+      audioNode = audioContext.createScriptProcessor(
+        2048,0,1
+      );
+
+      audioNode.onaudioprocess = function(event) {
+
+        const output = event.outputBuffer.getChannelData(0);
+
+        const step = SAMPLE_RATE / audioContext.sampleRate;
+
+        for (let i=0;i<output.length;i++) {
+
+          if (writeIndex - readPosition > RING_SIZE-2) {
+            readPosition = writeIndex - RING_SIZE/2;
+          }
+
+          if (readPosition + 1 >= writeIndex) {
+            output[i] = 0;
+            continue;
+          }
+
+          const index = Math.floor(readPosition);
+
+          const fraction = readPosition-index;
+
+          const s1 = audioRing[index % RING_SIZE];
+          const s2 = audioRing[(index+1) % RING_SIZE];
+
+          output[i] = (s1 + (s2-s1)*fraction) * 0.35;
+
+          readPosition += step;
+        }
+      };
+
+      audioNode.connect(audioContext.destination);
+    }
+
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+
+    if (!audioRunning) {
+
+      readPosition = writeIndex;
+      audioRunning = true;
+
+      document.getElementById("audioBtn").textContent =
+        "■ STOP AUDIO";
+
+      document.getElementById("audioStatus").textContent =
+        "Audio active · " + selectedMode;
+
+    } else {
+
+      audioRunning = false;
+
+      document.getElementById("audioBtn").textContent =
+        "▶ START AUDIO";
+
+      document.getElementById("audioStatus").textContent =
+        "Audio stopped";
+    }
+
+  } catch(error) {
+    alert("Audio error: " + error.message);
+  }
 };
-</script></body></html>
+
+// =============================================
+// RECORDING
+// =============================================
+
+document.getElementById("recordBtn").onclick = () => {
+
+  if (!recording) {
+
+    recording = true;
+    recordStart = Date.now();
+    recordingRows = [];
+
+    document.getElementById("recordBtn").textContent =
+      "■ STOP RECORDING";
+
+    document.getElementById("recordBtn").classList.add("recording");
+
+    document.getElementById("recordStatus").textContent =
+      "Recording active";
+
+  } else {
+
+    recording = false;
+
+    document.getElementById("recordBtn").textContent =
+      "● START RECORDING";
+
+    document.getElementById("recordBtn").classList.remove("recording");
+
+    document.getElementById("recordStatus").textContent =
+      "Recording saved in browser memory";
+
+  }
+};
+
+// =============================================
+// RECORDING TIMER
+// =============================================
+
+setInterval(() => {
+
+  if (!recording) return;
+
+  const seconds = Math.floor((Date.now()-recordStart)/1000);
+
+  const min = String(Math.floor(seconds/60)).padStart(2,"0");
+  const sec = String(seconds%60).padStart(2,"0");
+
+  document.getElementById("recordTime").textContent =
+    min + ":" + sec;
+
+},1000);
+
+// =============================================
+// EXPORT CSV
+// =============================================
+
+document.getElementById("exportBtn").onclick = () => {
+
+  if (recordingRows.length === 0) {
+
+    alert("No recorded samples. Start recording first.");
+    return;
+  }
+
+  let csv = "Frame,MIC1_ADC,MIC2_ADC,MIC3_ADC\n";
+
+  for (const row of recordingRows) {
+    csv += row.join(",") + "\n";
+  }
+
+  const blob = new Blob([csv], {
+    type:"text/csv;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "three_channel_heart_sound.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
+
+</script>
+</body>
+</html>
