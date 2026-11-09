@@ -1311,6 +1311,8 @@ document.getElementById("csvFile").addEventListener("change", async (event) => {
     const c2 = findCol("mic2_adc", "ch2_adc", "adc2");
     const c3 = findCol("mic3_adc", "ch3_adc", "adc3");
     const cf = findCol("frame", "sample", "time_s", "timestamp");
+    const eventCols = ["mc1_event","mc2_event","mc3_event"].map(name => headers.indexOf(name));
+    const bpmCols = ["mc1_bpm","mc2_bpm","mc3_bpm","consensus_bpm"].map(name => headers.indexOf(name));
     const ce = findCol("sound_event", "sound", "event");
     const cb = findCol("heart_rate_bpm", "bpm");
 
@@ -1325,8 +1327,12 @@ document.getElementById("csvFile").addEventListener("change", async (event) => {
         rows.push({
           frame: cf >= 0 ? cells[cf] : i,
           adc: vals,
-          sound: ce >= 0 ? (cells[ce] || "") : "",
-          bpm: cb >= 0 ? (cells[cb] || "") : ""
+          sound: eventCols.some(c => c >= 0)
+            ? eventCols.map((c,i) => c >= 0 && cells[c] ? "MC" + (i+1) + ": " + cells[c] : "").filter(Boolean).join(" | ")
+            : (ce >= 0 ? (cells[ce] || "") : ""),
+          bpm: bpmCols.some(c => c >= 0)
+            ? bpmCols.map((c,i) => c >= 0 && cells[c] ? ["MC1","MC2","MC3","Consensus"][i] + ": " + cells[c] : "").filter(Boolean).join(" | ")
+            : (cb >= 0 ? (cells[cb] || "") : "")
         });
       }
     }
