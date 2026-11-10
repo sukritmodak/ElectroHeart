@@ -936,28 +936,24 @@ function processSample(values) {
   document.getElementById("peak3").textContent =
     "Peak: " + Math.round(peaks[2]);
 
-  // Send selected audio channel into ring buffer
-  if (audioRunning) {
-
-    let sample = 0;
-
-    if (selectedMode === "1") {
-      sample = normalized(0);
-    } else if (selectedMode === "2") {
-      sample = normalized(1);
-    } else if (selectedMode === "3") {
-      sample = normalized(2);
-    } else {
-      sample = (
-        normalized(0) * volume(0) +
-        normalized(1) * volume(1) +
-        normalized(2) * volume(2)
-      ) / 3;
-    }
-
-    audioRing[writeIndex % RING_SIZE] = sample;
-    writeIndex++;
+  // Continuously buffer the real incoming analog signal.
+  // Playback can be started at any time without losing the live stream.
+  let audioSample = 0;
+  if (selectedMode === "1") {
+    audioSample = normalized(0);
+  } else if (selectedMode === "2") {
+    audioSample = normalized(1);
+  } else if (selectedMode === "3") {
+    audioSample = normalized(2);
+  } else {
+    audioSample = (
+      normalized(0) * volume(0) +
+      normalized(1) * volume(1) +
+      normalized(2) * volume(2)
+    ) / 3;
   }
+  audioRing[writeIndex % RING_SIZE] = audioSample;
+  writeIndex++;
 
   if (recording) {
 
@@ -1096,13 +1092,10 @@ function addChannelSoundEvent(channel, label, atSample) {
 }
 
 function normalized(i) {
-
-  const gain = volume(i);
-
-  // Remove DC component
-  const sample = (latest[i] - baselines[i]) / 2048;
-
-  return sample * gain * 2.0;
+  // Baseline subtraction removes the ADC's DC offset.
+  // Extra gain makes low-amplitude heart sounds audible on headphones.
+  const centered = (latest[i] - baselines[i]) / 2048;
+  return centered * volume(i) * 10.0;
 }
 
 function volume(i) {
@@ -1221,8 +1214,12 @@ document.querySelectorAll("[data-mode]").forEach(button => {
 
     button.classList.add("active");
 
-    // Start with a fresh audio buffer after channel switching
-    readPosition = writeIndex;
+    // Continue from the newest buffered samples after channel switching.
+    readPosition = Math.max(0, writeIndex - Math.floor(SAMPLE_RATE * 0.04));
+    if (audioRunning) {
+      document.getElementById("audioStatus").textContent =
+        "Live audio active · " + selectedMode;
+    }
 
   };
 });
@@ -1232,29 +1229,19 @@ document.querySelectorAll("[data-mode]").forEach(button => {
 // =============================================
 
 document.getElementById("audioBtn").onclick = async () => {
-
   try {
-
     if (!audioContext) {
-
-      audioContext = new (
-        window.AudioContext || window.webkitAudioContext
-      )();
-
-      audioNode = audioContext.createScriptProcessor(
-        2048,0,1
-      );
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioNode = audioContext.createScriptProcessor(1024, 0, 1);
 
       audioNode.onaudioprocess = function(event) {
-
         const output = event.outputBuffer.getChannelData(0);
-
         const step = SAMPLE_RATE / audioContext.sampleRate;
 
-        for (let i=0;i<output.length;i++) {
-
-          if (writeIndex - readPosition > RING_SIZE-2) {
-            readPosition = writeIndex - RING_SIZE/2;
+        for (let i = 0; i < output.length; i++) {
+          // If the browser falls behind, jump forward to the newest live audio.
+          if (writeIndex - readPosition > RING_SIZE - 4) {
+            readPosition = writeIndex - Math.floor(SAMPLE_RATE * 0.05);
           }
 
           if (readPosition + 1 >= writeIndex) {
@@ -1263,14 +1250,13 @@ document.getElementById("audioBtn").onclick = async () => {
           }
 
           const index = Math.floor(readPosition);
+          const fraction = readPosition - index;
+          const a = audioRing[index % RING_SIZE];
+          const b = audioRing[(index + 1) % RING_SIZE];
+          const interpolated = a + (b - a) * fraction;
 
-          const fraction = readPosition-index;
-
-          const s1 = audioRing[index % RING_SIZE];
-          const s2 = audioRing[(index+1) % RING_SIZE];
-
-          output[i] = (s1 + (s2-s1)*fraction) * 0.35;
-
+          // Soft limiter prevents clipping while retaining quiet heart sounds.
+          output[i] = Math.tanh(interpolated * 2.2) * 0.85;
           readPosition += step;
         }
       };
@@ -1278,33 +1264,22 @@ document.getElementById("audioBtn").onclick = async () => {
       audioNode.connect(audioContext.destination);
     }
 
-    if (audioContext.state === "suspended") {
-      await audioContext.resume();
-    }
+    if (audioContext.state !== "running") await audioContext.resume();
 
     if (!audioRunning) {
-
-      readPosition = writeIndex;
+      // Start slightly behind the newest sample to avoid an empty-buffer start.
+      readPosition = Math.max(0, writeIndex - Math.floor(SAMPLE_RATE * 0.08));
       audioRunning = true;
-
-      document.getElementById("audioBtn").textContent =
-        "■ STOP AUDIO";
-
+      document.getElementById("audioBtn").textContent = "■ STOP AUDIO";
       document.getElementById("audioStatus").textContent =
-        "Audio active · " + selectedMode;
-
+        connected ? "Live audio active · " + selectedMode : "Audio ready · connect ESP32 to hear live sound";
     } else {
-
       audioRunning = false;
-
-      document.getElementById("audioBtn").textContent =
-        "▶ START AUDIO";
-
-      document.getElementById("audioStatus").textContent =
-        "Audio stopped";
+      document.getElementById("audioBtn").textContent = "▶ START AUDIO";
+      document.getElementById("audioStatus").textContent = "Audio stopped";
     }
-
-  } catch(error) {
+  } catch (error) {
+    document.getElementById("audioStatus").textContent = "Audio error: " + error.message;
     alert("Audio error: " + error.message);
   }
 };
