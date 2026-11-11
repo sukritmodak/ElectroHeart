@@ -704,7 +704,8 @@ const detectors = [0,1,2].map(() => ({
   envelope: 0, noiseFloor: 3, previousEnvelope: 0,
   armed: true, lastPeakSample: -100000,
   lastS1Sample: null, lastS2Sample: null,
-  s1Count: 0, bpm: null, lastEvent: ""
+  s1Count: 0, bpm: null, lastEvent: "",
+  rrIntervals: [], pendingInterval: null
 }));
 let consensusBpm = null;
 let lastEventLabels = ["","",""];
@@ -1005,6 +1006,13 @@ function detectHeartSounds(values) {
   updateConsensusBpm();
 }
 
+function medianOf(values) {
+  const sorted = values.slice().sort((a,b) => a-b);
+  if (!sorted.length) return null;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid-1] + sorted[mid]) / 2;
+}
+
 function registerChannelPeak(channel, atSample) {
   const d = detectors[channel];
   const sinceS1 = d.lastS1Sample === null ? Infinity : (atSample - d.lastS1Sample) / SAMPLE_RATE;
@@ -1013,14 +1021,51 @@ function registerChannelPeak(channel, atSample) {
   if (d.lastS1Sample === null || sinceS1 > 0.45) {
     if (d.lastS1Sample !== null) {
       const interval = sinceS1;
-      if (interval >= 0.30 && interval <= 2.0) {
-        d.bpm = 60 / interval;
-        bpmHistory[channel].push({t:sampleClock/SAMPLE_RATE,value:d.bpm});
-        if(bpmHistory[channel].length>180)bpmHistory[channel].shift();
-      } else {
-        d.bpm = null;
+      let acceptedInterval = interval;
+
+      // Plausible cycle interval: 30–220 BPM.
+      if (interval >= 60/220 && interval <= 2.0) {
+        const previousMedian = medianOf(d.rrIntervals);
+
+        if (previousMedian !== null) {
+          const ratio = interval / previousMedian;
+
+          // Correct clear 2x/3x intervals caused by a missed S1.
+          if (ratio >= 1.65 && ratio <= 2.35 &&
+              Math.abs(interval/2 - previousMedian) / previousMedian <= 0.20) {
+            acceptedInterval = interval / 2;
+            d.pendingInterval = null;
+          } else if (ratio >= 2.65 && ratio <= 3.35 &&
+                     Math.abs(interval/3 - previousMedian) / previousMedian <= 0.20) {
+            acceptedInterval = interval / 3;
+            d.pendingInterval = null;
+          } else if (ratio < 0.65 || ratio > 1.35) {
+            // Ignore an isolated outlier; accept a new rhythm after two matching intervals.
+            if (d.pendingInterval !== null &&
+                Math.abs(interval - d.pendingInterval) / Math.max(interval, d.pendingInterval) <= 0.15) {
+              d.rrIntervals = [interval];
+              acceptedInterval = interval;
+              d.pendingInterval = null;
+            } else {
+              d.pendingInterval = interval;
+              acceptedInterval = null;
+            }
+          } else {
+            d.pendingInterval = null;
+          }
+        }
+
+        if (acceptedInterval !== null) {
+          d.rrIntervals.push(acceptedInterval);
+          if (d.rrIntervals.length > 5) d.rrIntervals.shift();
+          d.bpm = 60 / medianOf(d.rrIntervals);
+          bpmHistory[channel].push({t:atSample/SAMPLE_RATE,value:d.bpm});
+          if (bpmHistory[channel].length > 180) bpmHistory[channel].shift();
+        }
       }
+      // Invalid intervals do not overwrite the last stable BPM.
     }
+
     d.lastS1Sample = atSample;
     d.lastS2Sample = null;
     d.s1Count++;
@@ -1038,7 +1083,8 @@ function registerChannelPeak(channel, atSample) {
       return;
     }
   }
-  if(label === 'S1') triggerHeartPulse(channel);
+
+  if (label === "S1") triggerHeartPulse(channel);
   addChannelSoundEvent(channel, label, atSample);
 }
 
