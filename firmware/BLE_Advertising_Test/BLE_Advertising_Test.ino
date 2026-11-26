@@ -33,17 +33,11 @@ void setup() {
   service->start();
 
   BLEAdvertising* advertising = BLEDevice::getAdvertising();
-  BLEAdvertisementData primaryAdvertisement;
-  primaryAdvertisement.setFlags(0x06);
-  primaryAdvertisement.setName(TEST_NAME);
-  BLEAdvertisementData scanResponse;
-  scanResponse.setCompleteServices(BLEUUID(TEST_SERVICE_UUID));
-  advertising->setAdvertisementData(primaryAdvertisement);
-  advertising->setScanResponseData(scanResponse);
-  advertising->setScanResponse(true);
+  // Keep the local name in the primary advertisement for broad scanner compatibility.
+  advertising->setScanResponse(false);
   advertising->start();
 
-  Serial.println("PASS: BLE stack initialized and advertising start() called.");
+  Serial.println("BLE advertising start requested with the local name in the primary packet.");
   Serial.println("Now scan using Chrome dashboard or a BLE scanner app.");
   Serial.println("If ElectroHeart-TEST is not visible, check board type and the computer BLE adapter.");
 }
