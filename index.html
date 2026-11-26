@@ -303,10 +303,12 @@ $('disconnectBtn').onclick=disconnect;
 $('btBtn').onclick=async()=>{
  if(!navigator.bluetooth){status('Web Bluetooth unavailable. Use Chrome or Edge on HTTPS on a computer with Bluetooth LE.');return}
  try{
-  status('Checking Bluetooth adapter…');
-  if(typeof navigator.bluetooth.getAvailability==='function'&&!await navigator.bluetooth.getAvailability()){status('Bluetooth adapter unavailable. Enable Bluetooth in Windows and retry.');return}
-  status('Scanning for ElectroHeart-BLE…');parser=[];firstPacket=false;
-  bleDevice=await navigator.bluetooth.requestDevice({filters:[{name:'ElectroHeart-BLE'},{services:['6e400001-b5a3-f393-e0a9-e50e24dcca9e']}],optionalServices:['6e400001-b5a3-f393-e0a9-e50e24dcca9e']});
+  status('Opening Bluetooth device chooser…');
+  parser=[];firstPacket=false;
+  // Scan all nearby BLE peripherals: some ESP32 BLE stacks omit the local name
+  // or service UUID from the advertisement/scan response. The user selects
+  // ElectroHeart-BLE in the chooser; optionalServices authorizes GATT access.
+  bleDevice=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:['6e400001-b5a3-f393-e0a9-e50e24dcca9e']});
   bleDevice.addEventListener('gattserverdisconnected',handleGattDisconnected);
   status('Found '+(bleDevice.name||'ElectroHeart device')+' · opening BLE connection…');
   if(!bleDevice.gatt)throw new Error('Selected device does not expose a GATT server. Check that you selected the ESP32 BLE device.');
