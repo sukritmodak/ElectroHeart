@@ -53,9 +53,13 @@ The test sketch does not read microphones or stream PCG data. It only advertises
 
 ## Dashboard
 
-Three live PCG waveforms, raw ADC values, baseline-corrected signal plots, experimental S1/S2 event markers, per-channel BPM estimates, consensus BPM, playback from received analog samples, pause/resume, and CSV export.
+Three live PCG waveforms, raw ADC values, baseline-corrected signal plots, per-channel relative dBFS, experimental S1/S2 event markers, per-channel BPM estimates, a three-channel average-signal detector, median consensus BPM, playback from received analog samples, pause/resume, and CSV export.
 
-BPM is estimated from successive S1-to-S1 intervals and remains blank until enough intervals are available. Detection is experimental and must be validated against reference recordings. S3/S4 are not automatically classified.
+The **Analysis channel** selector controls the selected BPM and signal-level readouts: LEFT, CENTRE, RIGHT, or the arithmetic average of the three DC-corrected channels. The average signal has its own experimental detector; averaging microphones can attenuate signals when their phases differ.
+
+The dashboard also includes **Heart**, **Lung**, and **Fetal Heart** data-collection views. Respiratory rate and fetal heart rate are not calculated. The CSV export includes elapsed time, ADC values, S1/S2 event counts, and available BPM estimates for each microphone and the average channel. Recording duration, frame count, and estimated file size are shown while recording.
+
+BPM is estimated from successive detected S1-to-S1 intervals and remains blank until enough intervals are available. A stale estimate is cleared after signal loss. Detection is experimental and must be validated against reference recordings; it is not a clinical heart-rate measurement. S3/S4 are not automatically classified.
 
 ## Troubleshooting
 
