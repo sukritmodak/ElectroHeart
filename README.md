@@ -25,8 +25,8 @@ Use three KY-037 or KY-038 microphone modules in analog-output mode:
 1. In Arduino IDE select **ESP32 Dev Module** (or the matching classic ESP32 board).
 2. Open `firmware/ElectroHeart_3CH.ino` and upload it to the ESP32-WROOM. USB is used only for firmware upload.
 3. Open [ElectroHeart dashboard](https://sukritmodak.github.io/ElectroHeart/) in desktop Chrome or Edge over HTTPS.
-4. Click **Connect Bluetooth** and select `ElectroHeart-BLE`.
-5. Allow the browser connection. Live data should appear when notifications begin.
+4. Click **Connect Bluetooth**. The browser lists nearby BLE devices; select `ElectroHeart-BLE` (or the ESP32 device name if it is displayed differently).
+5. Allow the browser connection. The dashboard then checks for the ElectroHeart GATT service. Live data should appear when notifications begin.
 
 No USB data streaming, Bluetooth Classic SPP, COM port, or Python bridge is used.
 
@@ -46,7 +46,8 @@ BPM is estimated from successive S1-to-S1 intervals and remains blank until enou
 ## Troubleshooting
 
 - If Web Bluetooth is unavailable, use desktop Chrome or Edge on HTTPS and confirm the computer has BLE hardware.
-- If `ElectroHeart-BLE` does not appear, reset the ESP32 and scan again.
+- The chooser intentionally shows all nearby BLE devices so a missing/filtered advertised name does not hide the ESP32. Select the ESP32 device; the dashboard verifies its ElectroHeart service after connection.
+- If no ESP32 device appears at all, confirm the latest firmware was uploaded to a classic ESP32-WROOM, power-cycle it, and check that Bluetooth is enabled on the computer.
 - If the browser reports connected but the frame counter stays at zero, re-upload the latest firmware (16-byte notifications), then check the service/characteristic UUIDs and reset the ESP32.
 - If ADC readings are stuck near 0 or 4095, check wiring, module output voltage, and potentiometer settings.
 - If waveform amplitude is very small, adjust microphone placement/sensitivity and check the module's AO signal with an oscilloscope or ADC test.
