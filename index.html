@@ -39,13 +39,55 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 
-/* Additive fetal-acoustic research dashboard */
-.fhr-wrap{--fhr-bg:#fff4f8;--fhr-panel:#fffafd;--fhr-line:#f2bfd2;--fhr-ink:#55263c;--fhr-muted:#956b7d;color:var(--fhr-ink);background:linear-gradient(145deg,#fff0f6,#ffe3ef 55%,#fff8fb);border:1px solid #f1b6ce;border-radius:22px;padding:clamp(14px,2vw,24px);margin:24px 0;box-shadow:0 18px 44px #4d16301c}
-.fhr-wrap *{box-sizing:border-box}.fhr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.fhr-kicker{font-size:11px;font-weight:800;letter-spacing:.16em;color:#c34d82}.fhr-wrap h2{margin:5px 0 7px;font-size:clamp(22px,3vw,30px);color:#762d50}.fhr-wrap h3{margin:0 0 10px;color:#783653;font-size:15px}.fhr-sub{color:var(--fhr-muted);max-width:850px;line-height:1.55}.fhr-pill{border:1px solid #e6a8c2;background:#fff9fc;border-radius:99px;padding:7px 11px;color:#a23f6c;font-size:11px;font-weight:800}
-.fhr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:15px 0}.fhr-card{background:var(--fhr-panel);border:1px solid var(--fhr-line);border-radius:14px;padding:13px;min-width:0}.fhr-stat small{display:block;color:var(--fhr-muted);font-size:10px;font-weight:800;letter-spacing:.1em}.fhr-stat strong{display:block;font-size:clamp(21px,3vw,29px);color:#b83d75;margin-top:5px;font-variant-numeric:tabular-nums}.fhr-stat span{font-size:11px;color:var(--fhr-muted)}
-.fhr-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.fhr-field label{display:block;color:#87536b;font-size:11px;font-weight:800;margin-bottom:6px}.fhr-wrap select,.fhr-wrap input{width:100%;background:#fff;color:#56263e;border:1px solid #e6b0c6;border-radius:9px;padding:9px}.fhr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.fhr-actions button{background:#a93e70;border-color:#a93e70;color:white}.fhr-actions button.secondary{background:#fff7fb;color:#873557;border-color:#dfa1bc}.fhr-canvas{width:100%;height:210px;display:block;background:#fff;border:1px solid #f0c4d6;border-radius:10px}.fhr-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fhr-note{font-size:12px;color:#865b70;line-height:1.55}.fhr-warning{border-left:4px solid #d36b35;background:#fff8f0;border-radius:9px;padding:11px 13px;color:#814b31;font-size:12px;line-height:1.55;margin-top:12px}.fhr-quality{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#87536b}.fhr-dot{width:9px;height:9px;border-radius:50%;background:#c47b37;display:inline-block}.fhr-table{width:100%;border-collapse:collapse;font-size:12px}.fhr-table th,.fhr-table td{text-align:left;padding:8px;border-bottom:1px solid #f0d3df}.fhr-table th{color:#a34c73}
-@media(max-width:800px){.fhr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fhr-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.fhr-two{grid-template-columns:1fr}}
-@media(max-width:480px){.fhr-controls{grid-template-columns:1fr}.fhr-grid{gap:7px}.fhr-stat strong{font-size:22px}}
+/* Refined fetal heart rate dashboard visual system */
+.fhr-wrap{
+ --fhr-ink:#40263b;--fhr-muted:#80677b;--fhr-line:#f0d4e2;--fhr-panel:#fff;
+ position:relative;isolation:isolate;overflow:hidden;color:var(--fhr-ink);
+ background:
+  radial-gradient(ellipse at 92% 5%,rgba(255,184,211,.55),transparent 30%),
+  radial-gradient(ellipse at 3% 92%,rgba(225,184,238,.42),transparent 34%),
+  linear-gradient(135deg,#fff9fc 0%,#fff0f6 48%,#f9f0ff 100%);
+ border:1px solid #efd2e1;border-radius:26px;padding:clamp(16px,2.5vw,30px);margin:28px 0;
+ box-shadow:0 18px 55px rgba(112,53,91,.12)
+}
+.fhr-wrap:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.24;pointer-events:none;background-image:radial-gradient(#d58bad 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(120deg,black,transparent 72%)}
+.fhr-wrap *{box-sizing:border-box}
+.fhr-head{position:relative;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:clamp(17px,3vw,30px);margin:-4px -4px 20px;border-radius:20px;background:linear-gradient(115deg,#7e365f 0%,#b34f82 52%,#d77ba2 100%);box-shadow:0 12px 28px rgba(139,57,101,.2);overflow:hidden}
+.fhr-head:after{content:"♥";position:absolute;right:6%;top:-44px;font-size:180px;line-height:1;color:rgba(255,255,255,.09);pointer-events:none}
+.fhr-head>div,.fhr-head>span{position:relative;z-index:1}
+.fhr-kicker{font-size:10px;font-weight:850;letter-spacing:.19em;color:#ffe0ed}
+.fhr-wrap h2{margin:8px 0 9px;font-size:clamp(24px,3.2vw,34px);line-height:1.12;color:#fff;letter-spacing:-.025em}
+.fhr-wrap h3{margin:0 0 13px;color:#61354e;font-size:14px;font-weight:800;letter-spacing:.01em}
+.fhr-sub{color:#ffeaf2;max-width:760px;line-height:1.65;font-size:13px;margin:0}
+.fhr-pill{border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:99px;padding:9px 13px;color:#fff;font-size:10px;font-weight:850;letter-spacing:.08em;white-space:nowrap}
+.fhr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 14px}
+.fhr-card{position:relative;background:rgba(255,255,255,.88);border:1px solid var(--fhr-line);border-radius:17px;padding:16px;min-width:0;box-shadow:0 5px 17px rgba(112,53,91,.055)}
+.fhr-stat{overflow:hidden;min-height:112px}
+.fhr-stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#d56d9d,#a64c82);border-radius:4px}
+.fhr-stat small{display:block;color:#916b83;font-size:9px;font-weight:850;letter-spacing:.13em}
+.fhr-stat strong{display:block;font-size:clamp(23px,3vw,31px);line-height:1.2;color:#a43f75;margin-top:8px;font-variant-numeric:tabular-nums}
+.fhr-stat span{font-size:10px;color:var(--fhr-muted);display:block;margin-top:5px;line-height:1.4}
+.fhr-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.fhr-field label{display:block;color:#76516a;font-size:10px;font-weight:850;letter-spacing:.07em;margin-bottom:7px}
+.fhr-wrap select,.fhr-wrap input{width:100%;min-height:40px;background:#fff;color:#492b40;border:1px solid #e8c6d8;border-radius:10px;padding:9px 11px;outline:none;box-shadow:0 2px 5px rgba(112,53,91,.035)}
+.fhr-wrap select:focus,.fhr-wrap input:focus{border-color:#c66d9b;box-shadow:0 0 0 3px rgba(198,109,155,.14)}
+.fhr-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.fhr-actions button{background:linear-gradient(135deg,#a43e73,#c45f91);border:1px solid #a43e73;color:white;border-radius:10px;padding:10px 15px;font-weight:750;box-shadow:0 5px 12px rgba(164,62,115,.16);transition:transform .18s,box-shadow .18s}
+.fhr-actions button:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(164,62,115,.2)}
+.fhr-actions button.secondary{background:#fff8fc;color:#874566;border:1px solid #e5bfd2;box-shadow:none}
+.fhr-canvas{width:100%;height:225px;display:block;background:linear-gradient(180deg,#fff 0%,#fffafd 100%);border:1px solid #eed5e1;border-radius:12px;box-shadow:inset 0 1px 5px rgba(112,53,91,.035)}
+.fhr-two{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px}
+.fhr-two>.fhr-card{padding:17px}
+.fhr-note{font-size:11px;color:#80677b;line-height:1.6;margin:10px 0 0}
+.fhr-warning{border:1px solid #f1d4b7;border-left:4px solid #d18b49;background:linear-gradient(110deg,#fffaf3,#fff5ec);border-radius:12px;padding:13px 15px;color:#795239;font-size:11px;line-height:1.65;margin-top:14px}
+.fhr-quality{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:850;color:#76516a;background:#fff5fa;border:1px solid #f0d7e3;padding:7px 10px;border-radius:99px;margin-bottom:9px}
+.fhr-dot{width:9px;height:9px;border-radius:50%;background:#c47b37;display:inline-block;box-shadow:0 0 0 3px rgba(196,123,55,.13)}
+.fhr-table{width:100%;border-collapse:collapse;font-size:11px}
+.fhr-table th,.fhr-table td{text-align:left;padding:10px 8px;border-bottom:1px solid #f2e1e9}
+.fhr-table th{color:#98627d;font-weight:750;width:46%}.fhr-table td{color:#4e3547;font-weight:650}
+.fhr-wrap .fhr-card h3:before{content:"";display:inline-block;width:7px;height:7px;background:#c65f91;border-radius:50%;margin:0 8px 1px 0}
+@media(max-width:850px){.fhr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fhr-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.fhr-two{grid-template-columns:1fr}}
+@media(max-width:520px){.fhr-wrap{padding:13px;border-radius:18px}.fhr-head{padding:18px;margin:0 0 13px}.fhr-head:after{font-size:120px;right:0;top:-20px}.fhr-pill{font-size:9px}.fhr-grid{gap:8px}.fhr-stat{padding:12px;min-height:100px}.fhr-stat strong{font-size:22px}.fhr-controls{grid-template-columns:1fr}.fhr-canvas{height:190px}.fhr-two>.fhr-card{padding:13px}}
 
 </style></head>
 <body>
@@ -103,9 +145,9 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
 
 <section id="fhrDashboard" class="fhr-wrap">
  <div class="fhr-head">
-  <div><div class="fhr-kicker">EXPERIMENTAL RESEARCH MODULE · fPCG</div><h2>Fetal Heart Rate Research Dashboard</h2>
-   <p class="fhr-sub">Three-channel fetal-acoustic research workspace using the connected ElectroHeart microphones. Select an acoustic input, optionally nominate a noise-reference channel, compare raw and processed signals, and inspect experimental beat timing.</p></div>
-  <span class="fhr-pill">PINK RESEARCH INTERFACE · NOT CLINICAL</span>
+  <div><div class="fhr-kicker">FETAL ACOUSTIC MONITORING · fPCG</div><h2>Fetal Heart Rate Dashboard</h2>
+   <p class="fhr-sub">Three-channel fetal-acoustic monitoring workspace using the connected ElectroHeart microphones. Select an acoustic input, optionally nominate a noise-reference channel, compare raw and processed signals, and inspect experimental beat timing.</p></div>
+  <span class="fhr-pill">EXPERIMENTAL MODE · NOT CLINICAL</span>
  </div>
  <div class="fhr-grid">
   <div class="fhr-card fhr-stat"><small>EXPERIMENTAL FHR</small><strong id="fhrBpm">--</strong><span id="fhrBpmState">Waiting for acquisition</span></div>
