@@ -35,7 +35,7 @@ No USB data streaming, Bluetooth Classic SPP, COM port, or Python bridge is used
 - Service UUID: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
 - Notify characteristic UUID: `6e400003-b5a3-f393-e0a9-e50e24dcca9e`
 - Each sample frame: 8 bytes, `A5 5A` + three uint16 little-endian ADC values.
-- Firmware batches 20 frames (160 bytes) per notification and requests an ATT MTU of 185 bytes.
+- Firmware batches 2 frames (16 bytes) per notification. This deliberately stays below the default ATT MTU payload limit of 20 bytes, so data transfer does not depend on successful MTU negotiation.
 
 ## Dashboard
 
@@ -47,7 +47,7 @@ BPM is estimated from successive S1-to-S1 intervals and remains blank until enou
 
 - If Web Bluetooth is unavailable, use desktop Chrome or Edge on HTTPS and confirm the computer has BLE hardware.
 - If `ElectroHeart-BLE` does not appear, reset the ESP32 and scan again.
-- If it connects but no samples arrive, check the BLE service and characteristic UUIDs, module power, AO wiring, and common ground.
+- If the browser reports connected but the frame counter stays at zero, re-upload the latest firmware (16-byte notifications), then check the service/characteristic UUIDs and reset the ESP32.
 - If ADC readings are stuck near 0 or 4095, check wiring, module output voltage, and potentiometer settings.
 - If waveform amplitude is very small, adjust microphone placement/sensitivity and check the module's AO signal with an oscilloscope or ADC test.
 
