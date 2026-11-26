@@ -49,11 +49,11 @@ The test sketch does not read microphones or stream PCG data. It only advertises
 - Service UUID: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
 - Notify characteristic UUID: `6e400003-b5a3-f393-e0a9-e50e24dcca9e`
 - Each sample frame: 8 bytes, `A5 5A` + three uint16 little-endian ADC values.
-- Firmware batches 2 frames (16 bytes) per notification. This deliberately stays below the default ATT MTU payload limit of 20 bytes, so data transfer does not depend on successful MTU negotiation.
+- Firmware batches 20 frames (160 bytes) per notification and requests ATT MTU 185 to reduce BLE notification overhead. The browser parser accepts partial or combined notifications and reassembles complete 8-byte frames.
 
 ## Dashboard
 
-Three live PCG waveforms plotted from the original raw ADC samples (0–4095) with display-only vertical autoscaling, raw ADC values, per-channel relative dBFS, experimental S1/S2 event markers, per-channel BPM estimates, a three-channel average-signal detector, median consensus BPM, playback from received analog samples, pause/resume, and CSV export. The untouched ADC readings are preserved in the recording CSV. A separate DC-offset-corrected copy is used internally for event detection and speaker playback; no denoising or smoothing is applied to the recorded raw samples.
+Three live PCG waveforms plotted from the original raw ADC samples (0–4095), with visible per-channel raw ADC, tracked baseline and envelope readouts. The additional Signal channel comparison graph overlays all three baseline-corrected channels on a shared ADC-count scale; the Signal envelope graph plots |raw ADC − baseline| in ADC counts. The original raw ADC buffer and CSV values remain untouched. The display uses the newest samples in chronological order and display-only autoscaling. The untouched ADC readings are preserved in the recording CSV. A separate DC-offset-corrected copy is used internally for event detection and speaker playback; no denoising or smoothing is applied to the recorded raw samples.
 
 The **Analysis channel** selector controls the selected BPM and signal-level readouts: LEFT, CENTRE, RIGHT, or the arithmetic average of the three DC-corrected channels. The average signal has its own experimental detector; averaging microphones can attenuate signals when their phases differ.
 

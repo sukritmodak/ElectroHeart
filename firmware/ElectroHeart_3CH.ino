@@ -8,7 +8,7 @@
 // Three KY-037/KY-038 analog outputs (AO): GPIO 34, 35, 32. Sample rate: 2000 Hz.
 // Power microphone modules from 3.3 V, share GND, and never exceed 3.3 V on AO.
 // Each 8-byte frame: A5 5A + three uint16 little-endian ADC values.
-// Two frames are batched into each 16-byte BLE notification (within the default ATT MTU).
+// Twenty frames are batched into a 160-byte BLE notification; MTU 185 is requested.
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error "BLE unavailable: select a classic ESP32 board such as ESP32 Dev Module, not ESP32-S3."
@@ -16,7 +16,7 @@
 
 static constexpr uint8_t PIN_MIC1=34, PIN_MIC2=35, PIN_MIC3=32;
 static constexpr uint32_t SAMPLE_RATE=2000, SAMPLE_PERIOD_US=1000000UL/SAMPLE_RATE;
-static constexpr size_t FRAME_SIZE=8, FRAMES_PER_PACKET=2, PACKET_SIZE=FRAME_SIZE*FRAMES_PER_PACKET;
+static constexpr size_t FRAME_SIZE=8, FRAMES_PER_PACKET=20, PACKET_SIZE=FRAME_SIZE*FRAMES_PER_PACKET; // 160-byte BLE notification
 static const char* DEVICE_NAME="ElectroHeart-BLE";
 static const char* SERVICE_UUID="6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 static const char* TX_UUID="6e400003-b5a3-f393-e0a9-e50e24dcca9e";
