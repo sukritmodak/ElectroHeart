@@ -201,7 +201,8 @@ canvas{background-image:linear-gradient(rgba(83,167,184,.055) 1px,transparent 1p
 </section>
 <section class="panel" id="systemInfo"><div class="section-heading"><div><div class="eyebrow">HARDWARE & CONNECTION</div><h2 style="margin:0">System information</h2><p>Current acquisition interface and sensor configuration</p></div><span class="section-tag">ESP32 · BLE</span></div><div class="row"><span class="pill">BLE notify · 16-byte packet / 2 frames</span><span class="pill">3 × 12-bit ADC</span><span class="pill">BLE service: 6e400001…</span><span class="pill">BLE notifications</span></div><p class="note">Bluetooth data is sent directly from the ESP32 over BLE. Connect each microphone AO pin to its own ESP32 ADC input (GPIO 34, 35, 32). Power modules from 3.3 V, share GND, and keep AO within 0–3.3 V. The dashboard tracks each module's DC bias automatically.</p></section>
 
-<section id="fhrDashboard" class="fhr-wrap">\n <div class="fhr-warning"><strong>Research-only limitation:</strong> This module displays acoustic beat candidates from general-purpose KY-037/KY-038 microphones. It does not establish that a detected sound is fetal, and any BPM is an unvalidated acoustic estimate—not a fetal heart-rate measurement. This is not a Doppler or CTG monitor and must not be used for pregnancy monitoring, diagnosis, reassurance, or treatment decisions. Never use this display to assess fetal wellbeing; consult a qualified maternity-care professional for clinical concerns.</div>
+<section id="fhrDashboard" class="fhr-wrap">
+ <div class="fhr-warning"><strong>Research-only limitation:</strong> This module displays acoustic beat candidates from general-purpose KY-037/KY-038 microphones. It does not establish that a detected sound is fetal, and any BPM is an unvalidated acoustic estimate—not a fetal heart-rate measurement. This is not a Doppler or CTG monitor and must not be used for pregnancy monitoring, diagnosis, reassurance, or treatment decisions. Never use this display to assess fetal wellbeing; consult a qualified maternity-care professional for clinical concerns.</div>
  <div class="fhr-head">
   <div><div class="fhr-kicker">FETAL ACOUSTIC RESEARCH · fPCG</div><h2>Fetal Acoustic Research Dashboard</h2>
    <p class="fhr-sub">Three-channel fetal-acoustic monitoring workspace using the connected ElectroHeart microphones. Select an acoustic input, optionally nominate a noise-reference channel, compare raw and processed signals, and inspect estimated beat timing.</p></div>
@@ -478,7 +479,12 @@ setInterval(()=>{if(record){const s=Math.floor((performance.now()-recordStart)/1
   if(mode==='off')return x;
   return lp;
  }
- function applyNotch(x){\n  if(el('fhrNotch').value==='off')return x;\n  const w0=2*Math.PI*50/SR,Q=25,a=Math.sin(w0)/(2*Q),b0=1/(1+a),b1=-2*Math.cos(w0)/(1+a),b2=b0,a1=b1,a2=(1-a)/(1+a);\n  const y=b0*x+b1*notchX1+b2*notchX2-a1*notchY1-a2*notchY2;notchX2=notchX1;notchX1=x;notchY2=notchY1;notchY1=y;return y;\n }\n function referenceFilter(x){
+ function applyNotch(x){
+  if(el('fhrNotch').value==='off')return x;
+  const w0=2*Math.PI*50/SR,Q=25,a=Math.sin(w0)/(2*Q),b0=1/(1+a),b1=-2*Math.cos(w0)/(1+a),b2=b0,a1=b1,a2=(1-a)/(1+a);
+  const y=b0*x+b1*notchX1+b2*notchX2-a1*notchY1-a2*notchY2;notchX2=notchX1;notchX1=x;notchY2=notchY1;notchY1=y;return y;
+ }
+ function referenceFilter(x){
   const hpA=Math.exp(-2*Math.PI*20/SR),hp=hpA*(refHpY+x-refHpX);refHpX=x;refHpY=hp;refLp+=alpha(150)*(hp-refLp);return refLp;
  }
  function processSample(vals){
