@@ -1,5 +1,6 @@
 # Deploy the static ElectroHeart dashboard to GitHub Pages
 name: Deploy static content to Pages
+run-name: ElectroHeart clean Pages deployment
 
 on:
   push:
