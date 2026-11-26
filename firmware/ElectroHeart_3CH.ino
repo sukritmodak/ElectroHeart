@@ -5,7 +5,7 @@
 #include <BLE2902.h>
 
 // ElectroHeart BLE-only firmware for classic ESP32 / ESP32-WROOM.
-// Three PCG ADC inputs: GPIO 34, 35, 32. Sample rate: 2000 Hz.
+// Three KY-037/KY-038 analog outputs (AO): GPIO 34, 35, 32. Sample rate: 2000 Hz.\n// Power microphone modules from 3.3 V, share GND, and never exceed 3.3 V on AO.
 // Each 8-byte frame: A5 5A + three uint16 little-endian ADC values.
 // 20 frames are batched into each 160-byte BLE notification.
 
