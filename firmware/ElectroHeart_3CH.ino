@@ -7,7 +7,7 @@
 // ElectroHeart BLE-only firmware for classic ESP32 / ESP32-WROOM.
 // Three KY-037/KY-038 analog outputs (AO): GPIO 34, 35, 32. Sample rate: 2000 Hz.\n// Power microphone modules from 3.3 V, share GND, and never exceed 3.3 V on AO.
 // Each 8-byte frame: A5 5A + three uint16 little-endian ADC values.
-// 20 frames are batched into each 160-byte BLE notification.
+// Two frames are batched into each 16-byte BLE notification so it works with the default BLE ATT MTU (23 bytes).
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error "BLE unavailable: select a classic ESP32 board such as ESP32 Dev Module, not ESP32-S3."
@@ -15,7 +15,7 @@
 
 static constexpr uint8_t PIN_MIC1=34, PIN_MIC2=35, PIN_MIC3=32;
 static constexpr uint32_t SAMPLE_RATE=2000, SAMPLE_PERIOD_US=1000000UL/SAMPLE_RATE;
-static constexpr size_t FRAME_SIZE=8, FRAMES_PER_PACKET=20, PACKET_SIZE=FRAME_SIZE*FRAMES_PER_PACKET;
+static constexpr size_t FRAME_SIZE=8, FRAMES_PER_PACKET=2, PACKET_SIZE=FRAME_SIZE*FRAMES_PER_PACKET;
 static const char* DEVICE_NAME="ElectroHeart-BLE";
 static const char* SERVICE_UUID="6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 static const char* TX_UUID="6e400003-b5a3-f393-e0a9-e50e24dcca9e";
@@ -27,8 +27,8 @@ uint32_t nextSample=0;
 bool clientConnected=false;
 
 class ServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer*) override { clientConnected=true; }
-  void onDisconnect(BLEServer*) override { clientConnected=false; BLEDevice::startAdvertising(); }
+  void onConnect(BLEServer*) override { clientConnected=true; notifyLength=0; }
+  void onDisconnect(BLEServer*) override { clientConnected=false; notifyLength=0; BLEDevice::startAdvertising(); }
 };
 
 static inline void put16(uint8_t* p,uint16_t v){p[0]=(uint8_t)(v&0xFF);p[1]=(uint8_t)(v>>8);}
