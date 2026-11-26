@@ -136,7 +136,7 @@ function drawRawWave(i,visible,count){
  if(hi-lo<4){const mid=(hi+lo)/2;lo=Math.max(0,mid-8);hi=Math.min(4095,mid+8)}
  const span=Math.max(1,hi-lo),left=(cursor-n+N)%N;
  ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath();
- for(let x=0;x<w;x++){const q=Math.min(n-1,Math.floor(x*(n-1)/Math.max(1,w-1))),idx=(left+q)%N,y=h-9-((rawRing[i][idx]-lo)/span)*(h-18);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+ for(let x=0;x<w;x++){const q=Math.min(n-1,Math.floor(x*(n-1)/Math.max(1,w-1))),idx=(left+q)%N,v=rawRing[i][idx],normalized=(v-lo)/span,y=h-9-((i===2?1-normalized:normalized))*(h-18);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
  ctx.stroke();ctx.fillStyle='#b9d0d8';ctx.font='11px ui-monospace,monospace';
  ctx.fillText('MAX '+Math.round(hi),8,14);ctx.fillText('MIN '+Math.round(lo),8,h-5);
  if(hi-lo<4)ctx.fillText('LOW VARIATION',w-125,14);
