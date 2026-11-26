@@ -63,11 +63,14 @@ void setup(){
   service->start();
   BLEAdvertising* advertising=BLEDevice::getAdvertising();
   // Advertise the local name directly in the primary packet.
-  // The dashboard uses acceptAllDevices and discovers the GATT service after selection.
-  // This avoids depending on scan-response support in the host scanner.
-  advertising->setScanResponse(false);
+  // Advertise the service UUID so Chrome/Edge can reliably discover this BLE peripheral.
+  // Keep scan response enabled so the complete local device name is visible to the chooser.
+  advertising->addServiceUUID(SERVICE_UUID);
+  advertising->setScanResponse(true);
+  advertising->setMinPreferred(0x06);
+  advertising->setMaxPreferred(0x12);
   advertising->start();
-  Serial.println("BLE advertising start requested (primary local name enabled).");
+  Serial.println("BLE advertising started with ElectroHeart service UUID and device name.");
   Serial.println("Open Chrome dashboard and choose ElectroHeart-BLE");
   nextSample=micros();
 }
