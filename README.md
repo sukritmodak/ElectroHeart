@@ -30,6 +30,20 @@ Use three KY-037 or KY-038 microphone modules in analog-output mode:
 
 No USB data streaming, Bluetooth Classic SPP, COM port, or Python bridge is used.
 
+## BLE discovery diagnostic
+
+If Chrome's chooser still does not show the ESP32, isolate the radio/advertising layer before troubleshooting the waveform dashboard:
+
+1. In Arduino IDE open `firmware/BLE_Advertising_Test/BLE_Advertising_Test.ino` (open the sketch from its own folder).
+2. Select **ESP32 Dev Module** for a classic ESP32-WROOM board and upload this test sketch.
+3. Open Serial Monitor at **115200 baud**. It should print `PASS: BLE stack initialized and advertising start() called.`
+4. On an Android phone, install a BLE scanner such as nRF Connect and scan for **ElectroHeart-TEST**. Also try the Chrome dashboard on a computer with Bluetooth LE.
+5. If the phone sees ElectroHeart-TEST but Windows Chrome does not, the ESP32 is advertising; troubleshoot the Windows Bluetooth adapter/driver and Chrome permissions.
+6. If neither phone nor computer sees it, check that the selected board is a classic ESP32 with BLE support, confirm upload success, and power-cycle the board.
+7. After the test, upload the normal `firmware/ElectroHeart_3CH.ino` sketch again to restore the three-channel monitor.
+
+The test sketch does not read microphones or stream PCG data. It only advertises a minimal BLE service to test discovery. The normal firmware prints boot/advertising diagnostics to Serial Monitor at 115200 baud; this serial output is for diagnostics only, not the data stream.
+
 ## BLE protocol
 
 - Service UUID: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
@@ -47,7 +61,7 @@ BPM is estimated from successive S1-to-S1 intervals and remains blank until enou
 
 - If Web Bluetooth is unavailable, use desktop Chrome or Edge on HTTPS and confirm the computer has BLE hardware.
 - The chooser intentionally shows all nearby BLE devices so a missing/filtered advertised name does not hide the ESP32. Select the ESP32 device; the dashboard verifies its ElectroHeart service after connection.
-- If no ESP32 device appears at all, confirm the latest firmware was uploaded to a classic ESP32-WROOM, power-cycle it, and check that Bluetooth is enabled on the computer.
+- If no ESP32 device appears at all, use the BLE advertising diagnostic sketch below to determine whether the ESP32 or computer adapter is responsible.
 - If the browser reports connected but the frame counter stays at zero, re-upload the latest firmware (16-byte notifications), then check the service/characteristic UUIDs and reset the ESP32.
 - If ADC readings are stuck near 0 or 4095, check wiring, module output voltage, and potentiometer settings.
 - If waveform amplitude is very small, adjust microphone placement/sensitivity and check the module's AO signal with an oscilloscope or ADC test.
