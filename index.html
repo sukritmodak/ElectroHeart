@@ -149,7 +149,7 @@ $('btBtn').onclick=()=>{
 };
 
 /* Dashboard selection, relative dBFS, recording and acoustic beat estimation */
-let dashboardMode='heart', recording=false, recordingStarted=0, recordingRows=0, recordingChunks=[];
+let dashboardMode='heart', recording=false, recordingStarted=0, recordingElapsed=0, recordingRows=0, recordingChunks=[];
 let dbWindows=[[],[],[]], sampleIndex=0, lastBeatSample=-1, detectedIntervals=[], detectedBeats=0;
 const dbWindowSize=400;
 function fmtDuration(ms){
@@ -160,7 +160,7 @@ function formatBytes(n){
  if(n<1024)return n+' B';if(n<1048576)return (n/1024).toFixed(1)+' KB';return (n/1048576).toFixed(2)+' MB';
 }
 function updateRecordingStats(){
- const elapsed=recording?performance.now()-recordingStarted:0;
+ const elapsed=recording?performance.now()-recordingStarted:recordingElapsed;
  $('recordTime').textContent=fmtDuration(elapsed);
  $('recordRows').textContent=recordingRows.toLocaleString();
  const size=recordingChunks.reduce((n,s)=>n+new Blob([s]).size,0);
@@ -168,14 +168,14 @@ function updateRecordingStats(){
 }
 $('recordBtn').onclick=()=>{
  if(recording)return;
- recording=true;recordingStarted=performance.now();recordingRows=0;
+ recording=true;recordingStarted=performance.now();recordingElapsed=0;recordingRows=0;
  recordingChunks=['timestamp_ms,mic1_analog,mic1_digital,mic2_analog,mic2_digital,mic3_analog,mic3_digital\n'];
  $('recordBtn').disabled=true;$('stopRecordBtn').disabled=false;
  $('recordStatus').textContent='Recording';$('recordStatus').style.color='#70e6a3';
 };
 $('stopRecordBtn').onclick=()=>{
  if(!recording)return;
- recording=false;
+ recordingElapsed=performance.now()-recordingStarted;recording=false;
  const blob=new Blob(recordingChunks,{type:'text/csv;charset=utf-8'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='ElectroHeart_'+new Date().toISOString().replace(/[:.]/g,'-')+'.csv';
@@ -213,6 +213,7 @@ function updateDb(i,analog){
 }
 let previousAbs=0, currentAbs=0, previous2Abs=0;
 function updateBeatDetector(){
+ if(dashboardMode==='lung'){ $('heartRate').textContent='-- breaths/min'; $('hrQuality').textContent='Respiratory rate is not calculated yet. This dashboard currently displays lung-sound waveforms and relative dBFS levels.'; return; }
  const rate=Math.max(100,Math.min(10000,Number($('sampleRate').value)||2000));
  const raw=chosenSignal();
  const abs=Math.abs(raw-2048);
