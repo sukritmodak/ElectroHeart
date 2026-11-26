@@ -51,7 +51,7 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
 <body>
 <header class="topbar">
   <div class="brand-lockup"><div class="brand-mark">♥</div><div class="brand-name">ELECTROHEART<small>3-CHANNEL CARDIAC ACOUSTIC MONITOR</small></div></div>
-  <nav class="top-nav"><a href="#liveMonitor">LIVE MONITOR</a><a href="#analysis">ANALYSIS</a><a href="#recording">RECORDINGS</a><a href="#csvAnalysis">CSV ANALYSIS</a></nav>
+  <nav class="top-nav"><a href="#liveMonitor">LIVE MONITOR</a><a href="#analysis">ANALYSIS</a><a href="#recording">RECORDINGS</a><a href="#csvAnalysis">CSV ANALYSIS</a><a href="#fhrDashboard">FETAL HR RESEARCH</a></nav>
   <span class="topbar-chip">ESP32 · BLE</span>
 </header>
 <main>
@@ -120,6 +120,7 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
    <div class="fhr-field"><label for="fhrReference">NOISE-REFERENCE CHANNEL</label><select id="fhrReference"><option value="-1">OFF · single-channel</option><option value="0">MIC 1 · GPIO 34</option><option value="1">MIC 2 · GPIO 35</option><option value="2">MIC 3 · GPIO 32</option></select></div>
    <div class="fhr-field"><label for="fhrFilter">DIGITAL FILTER</label><select id="fhrFilter"><option value="band">FPCG band-pass · 20–150 Hz</option><option value="wide">Wide acoustic · 10–250 Hz</option><option value="off">Filter off · baseline removed</option></select></div>
    <div class="fhr-field"><label for="fhrDenoise">NOISE REDUCTION</label><select id="fhrDenoise"><option value="adaptive">Adaptive reference cancellation</option><option value="smooth">Envelope smoothing only</option><option value="off">Off</option></select></div>
+   <div class="fhr-field"><label for="fhrNotch">50 Hz MAINS HUM FILTER</label><select id="fhrNotch"><option value="on">50 Hz notch · enabled</option><option value="off">Disabled</option></select></div>
   </div>
   <div class="fhr-actions"><button id="fhrStart">Start FHR analysis</button><button id="fhrStop" class="secondary">Pause FHR analysis</button><button id="fhrReset" class="secondary">Reset analysis</button><button id="fhrExport" class="secondary">Export FHR CSV</button></div>
   <p class="fhr-note" id="fhrAcqStatus">Connect the ESP32 using the main ElectroHeart connection panel first. The acquisition stream is the existing 3-channel, 2 kHz-per-channel ADC stream; this module does not add a Doppler sensor or alter firmware.</p>
@@ -323,11 +324,11 @@ setInterval(()=>{if(record){const s=Math.floor((performance.now()-recordStart)/1
 /* Additive experimental fetal-acoustic processing. Original acquisition/raw buffers are not modified. */
 (()=>{
  const SR=2000, CAP=1800, raw=new Float32Array(CAP), processed=new Float32Array(CAP), trend=[];
- let pos=0, seen=0, running=true, base=0, hpPrevX=0,hpPrevY=0,lp=0,refBase=0,refHpX=0,refHpY=0,refLp=0,lmsWeight=0;
+ let pos=0, seen=0, running=false, base=0, hpPrevX=0,hpPrevY=0,lp=0,refBase=0,refHpX=0,refHpY=0,refLp=0,lmsWeight=0,notchX1=0,notchX2=0,notchY1=0,notchY2=0;
  let env=0,prevEnv=0,prevPrevEnv=0,noiseFloor=2,lastPeak=-1,lastBeat=-1,ibi=[],beatCount=0,startAt=0,lastAccepted=null,rawMin=4095,rawMax=0,absSum=0,sqSum=0,qualityTicks=0;
  const el=id=>document.getElementById(id), channelName=i=>['MIC 1 · GPIO 34','MIC 2 · GPIO 35','MIC 3 · GPIO 32'][i];
  const alpha=(hz)=>1-Math.exp(-2*Math.PI*hz/SR);
- function resetFilters(){base=0;hpPrevX=0;hpPrevY=0;lp=0;refBase=0;refHpX=0;refHpY=0;refLp=0;lmsWeight=0;env=prevEnv=prevPrevEnv=0;noiseFloor=2;lastPeak=lastBeat=-1;ibi=[];beatCount=0;lastAccepted=null;trend.length=0;pos=seen=0;rawMin=4095;rawMax=0;absSum=sqSum=0;startAt=performance.now()}
+ function resetFilters(){base=0;hpPrevX=0;hpPrevY=0;lp=0;refBase=0;refHpX=0;refHpY=0;refLp=0;lmsWeight=0;notchX1=notchX2=notchY1=notchY2=0;env=prevEnv=prevPrevEnv=0;noiseFloor=2;lastPeak=lastBeat=-1;ibi=[];beatCount=0;lastAccepted=null;trend.length=0;pos=seen=0;rawMin=4095;rawMax=0;absSum=sqSum=0;startAt=performance.now()}
  function filterSample(x,reference){
   const mode=el('fhrFilter').value;
   const cutoff=mode==='wide'?10:20, low=mode==='wide'?250:150;
@@ -337,7 +338,7 @@ setInterval(()=>{if(record){const s=Math.floor((performance.now()-recordStart)/1
   if(mode==='off')return x;
   return lp;
  }
- function referenceFilter(x){
+ function applyNotch(x){\n  if(el('fhrNotch').value==='off')return x;\n  const w0=2*Math.PI*50/SR,Q=25,a=Math.sin(w0)/(2*Q),b0=1/(1+a),b1=-2*Math.cos(w0)/(1+a),b2=b0,a1=b1,a2=(1-a)/(1+a);\n  const y=b0*x+b1*notchX1+b2*notchX2-a1*notchY1-a2*notchY2;notchX2=notchX1;notchX1=x;notchY2=notchY1;notchY1=y;return y;\n }\n function referenceFilter(x){
   const hpA=Math.exp(-2*Math.PI*20/SR),hp=hpA*(refHpY+x-refHpX);refHpX=x;refHpY=hp;refLp+=alpha(150)*(hp-refLp);return refLp;
  }
  function processSample(vals){
@@ -422,7 +423,7 @@ setInterval(()=>{if(record){const s=Math.floor((performance.now()-recordStart)/1
  el('fhrReset').onclick=()=>{resetFilters();['fhrBpm','fhrIbi'].forEach(id=>el(id).textContent='--');el('fhrBeats').textContent='0';el('fhrQuality').textContent='--';el('fhrQualityText').textContent='Reset · waiting for samples';drawAll()};
  el('fhrInput').onchange=()=>{resetFilters();el('fhrInputName').textContent=channelName(Number(el('fhrInput').value));el('fhrAcqStatus').textContent='Input changed. Collecting a new signal window.';drawAll()};
  el('fhrReference').onchange=()=>{lmsWeight=0;refBase=refHpX=refHpY=refLp=0;const r=Number(el('fhrReference').value);el('fhrRefName').textContent=r<0?'OFF':channelName(r);};
- ['fhrFilter','fhrDenoise'].forEach(id=>el(id).onchange=()=>{resetFilters();el('fhrAcqStatus').textContent='Processing setting changed. New analysis window started.'});
+ ['fhrFilter','fhrDenoise','fhrNotch'].forEach(id=>el(id).onchange=()=>{resetFilters();el('fhrAcqStatus').textContent='Processing setting changed. New analysis window started.'});
  el('fhrExport').onclick=()=>{
   const rows=['elapsed_seconds,experimental_bpm,interbeat_interval_ms,beat_candidates'];
   trend.forEach((p,i)=>rows.push([p.t.toFixed(3),p.bpm.toFixed(2),i?Math.round((p.t-trend[i-1].t)*1000):'',beatCount].join(',')));
