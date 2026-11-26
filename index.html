@@ -42,7 +42,7 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
 <body>
 <header class="topbar">
   <div class="brand-lockup"><div class="brand-mark">♥</div><div class="brand-name">ELECTROHEART<small>3-CHANNEL CARDIAC ACOUSTIC MONITOR</small></div></div>
-  <nav class="top-nav"><a href="#liveMonitor">LIVE MONITOR</a><a href="#analysis">ANALYSIS</a><a href="#recording">RECORDINGS</a></nav>
+  <nav class="top-nav"><a href="#liveMonitor">LIVE MONITOR</a><a href="#analysis">ANALYSIS</a><a href="#recording">RECORDINGS</a><a href="#csvAnalysis">CSV ANALYSIS</a></nav>
   <span class="topbar-chip">ESP32 · BLE</span>
 </header>
 <main>
@@ -70,6 +70,26 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
 <div class="two"><div><h3>Detected heart sound events</h3><div class="event-list" id="events">No detected events yet.</div></div><div><h3>Event legend</h3><p class="note"><b style="color:#ff8cae">S1 · LUB</b> — first heart sound / systolic onset<br><b style="color:#73ddeb">S2 · DUB</b> — second heart sound / end-systolic event<br><b style="color:#ffc46b">S3 / S4</b> — not labelled unless a dedicated validated detector is enabled. This version does not fabricate them. KY-037/KY-038 are low-cost sound modules; validate their acoustic response and signal quality before interpreting any event labels.</p></div></div></section>
 <section class="panel" id="soundDashboards"><div class="section-heading"><div><div class="eyebrow">RESEARCH MODES</div><h2 style="margin:0">Additional sound dashboards</h2><p>Switch between cardiac, respiratory and fetal acoustic data collection</p></div><span class="section-tag">3 MODES</span></div><div class="row"><label for="soundMode">Dashboard mode</label><select id="soundMode"><option value="heart">Heart sound · PCG</option><option value="lung">Lung sound</option><option value="fetal">Pregnancy · fetal heart sound</option></select><span class="pill" id="soundModeStatus">Heart sound monitoring</span></div><h3 id="soundModeTitle" style="margin-bottom:6px">Heart sound dashboard</h3><p class="note" id="soundModeDescription">Use the selected microphone or averaged three-channel signal for experimental heart-sound event analysis. The live waveforms above remain active.</p><div class="stats"><div class="stat"><small>SELECTED INPUT</small><strong id="modeSource">MIC 1 · LEFT</strong></div><div class="stat"><small>RATE OUTPUT</small><strong id="modeRate">--</strong></div><div class="stat"><small>STATUS</small><strong id="modeQuality">Waiting</strong></div></div><p class="note" id="soundModeCaution">Research prototype only. Experimental BPM estimates require validation against reference recordings and are not for clinical decisions.</p></section>\n<section class="panel"><h2>Live audio monitoring</h2><div class="row"><button class="primary" id="audioStart">Enable live audio</button><button id="audioStop" disabled>Mute audio</button><label>Listen to</label><select id="audioSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="mix">All 3 microphones</option></select><label>Volume</label><input id="volume" type="range" min="0" max="1" step=".05" value=".65"></div><p class="note">Audio is played from the incoming ADC samples (not a synthesized heartbeat). Only the microphone DC offset is removed for speaker playback; raw ADC samples remain unchanged in the raw-data buffer and CSV export. Browser playback uses the 2 kHz acquisition stream and microphone hardware, so fidelity is limited by both.</p></section>
 <section class="panel" id="recording"><div class="section-heading"><div><div class="eyebrow">SESSION DATA</div><h2 style="margin:0">CSV recording & export</h2><p>Capture incoming samples and export your session for offline analysis</p></div><span class="section-tag">DATA EXPORT</span></div><div class="row"><button class="primary" id="recordBtn" disabled>Start recording</button><button id="stopRecordBtn" disabled>Stop recording</button><button id="downloadBtn" disabled>Download CSV</button><span id="recordStatus" class="pill">Not recording</span></div><div class="stats" style="margin-top:10px"><div class="stat"><small>ELAPSED</small><strong id="recordTime">00:00</strong></div><div class="stat"><small>RECORDED FRAMES</small><strong id="recordRows">0</strong></div><div class="stat"><small>DATA RATE</small><strong id="dataRate">0 fps</strong></div><div class="stat"><small>BUFFERED SIZE</small><strong id="recordSize">0 B</strong></div></div><p class="note">CSV preserves the original raw ADC readings from all three microphones, alongside elapsed time, detected event counts and experimental BPM estimates. No denoising or smoothing is applied to the recorded ADC samples.</p></section>
+<section class="panel" id="csvAnalysis">
+  <div class="section-heading"><div><div class="eyebrow">OFFLINE SESSION REVIEW</div><h2 style="margin:0">CSV heart-rate analysis</h2><p>Upload a previously downloaded ElectroHeart CSV and analyse it later without connecting the ESP32.</p></div><span class="section-tag">OFFLINE ANALYSIS</span></div>
+  <div class="row csv-toolbar">
+    <label for="csvFile">Select recording CSV</label><input id="csvFile" type="file" accept=".csv,text/csv">
+    <label for="csvSource">Signal source</label><select id="csvSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="avg">Average · all 3 microphones</option></select>
+    <label for="csvSampleRate">Sampling rate</label><select id="csvSampleRate"><option value="2000" selected>2000 Hz</option></select>
+    <button class="primary" id="csvAnalyseBtn" disabled>Analyse CSV</button>
+  </div>
+  <p class="note" id="csvFileStatus">No CSV selected. Choose an ElectroHeart recording downloaded from the RECORDINGS section.</p>
+  <div class="stats" style="margin-top:12px">
+    <div class="stat"><small>AVERAGE ESTIMATED BPM</small><strong id="csvAvgBpm">--</strong></div>
+    <div class="stat"><small>MINIMUM BPM</small><strong id="csvMinBpm">--</strong></div>
+    <div class="stat"><small>MAXIMUM BPM</small><strong id="csvMaxBpm">--</strong></div>
+    <div class="stat"><small>VALID BPM ESTIMATES</small><strong id="csvBeatCount">--</strong></div>
+    <div class="stat"><small>ANALYSED DURATION</small><strong id="csvDuration">--</strong></div>
+    <div class="stat"><small>RAW SAMPLES</small><strong id="csvSamples">--</strong></div>
+  </div>
+  <div class="channel" style="margin-top:13px"><h3>Heart rate versus recording time</h3><canvas class="analysis-canvas" id="csvBpmCanvas" width="1200" height="340"></canvas><p class="note" id="csvGraphNote">The graph will appear after you upload and analyse a CSV. BPM is recalculated from the raw ADC columns, not copied from the old live BPM columns.</p></div>
+  <p class="note">Offline analysis repeats the prototype's experimental envelope-based beat-candidate method on the selected raw ADC signal. The time axis uses the selected sampling rate and sample count. Results are estimates for research review, not a clinically validated heart-rate measurement or diagnosis.</p>
+</section>
 <section class="panel" id="systemInfo"><div class="section-heading"><div><div class="eyebrow">HARDWARE & CONNECTION</div><h2 style="margin:0">System information</h2><p>Current acquisition interface and sensor configuration</p></div><span class="section-tag">ESP32 · BLE</span></div><div class="row"><span class="pill">BLE notify · 16-byte packet / 2 frames</span><span class="pill">3 × 12-bit ADC</span><span class="pill">BLE service: 6e400001…</span><span class="pill">BLE notifications</span></div><p class="note">Bluetooth data is sent directly from the ESP32 over BLE. Connect each microphone AO pin to its own ESP32 ADC input (GPIO 34, 35, 32). Power modules from 3.3 V, share GND, and keep AO within 0–3.3 V. The dashboard tracks each module's DC bias automatically.</p></section>
 </main>
 <script>
@@ -158,6 +178,88 @@ function updateSelectedLevel(){const source=$('analysisSource').value,idx=source
 const soundModes={heart:{title:'Heart sound dashboard',status:'PCG · cardiac acoustic signal',description:'Use LEFT, CENTRE, RIGHT or the arithmetic average of the three DC-corrected microphone signals. The average channel has its own experimental S1/S2 detector.',rate:()=>det[$('analysisSource').value==='avg'?3:Number($('analysisSource').value)].bpm,caution:'Heart-rate values are experimental acoustic estimates, not clinically validated. Check against a reference ECG or validated monitor before any research interpretation.'},lung:{title:'Lung sound dashboard',status:'Respiratory acoustic signal',description:'The three microphone waveforms remain live. Select a single microphone or the average signal to inspect and record respiratory sounds for offline analysis.',rate:()=>null,caution:'Respiratory rate, wheeze, crackle and disease classification are not implemented. No lung diagnosis or respiratory-rate measurement is provided.'},fetal:{title:'Fetal heart sound dashboard',status:'Fetal acoustic data collection',description:'Use this view only for supervised research data collection from the existing acoustic channels. The selected microphone or average waveform can be recorded to CSV.',rate:()=>null,caution:'Fetal heart rate and fetal-wellbeing assessment are not implemented. This prototype is not an obstetric monitor and must never guide pregnancy or treatment decisions.'}};
 function updateModeDashboard(){const mode=$('soundMode').value,m=soundModes[mode],bpm=m.rate();$('soundModeTitle').textContent=m.title;$('soundModeStatus').textContent=m.status;$('soundModeDescription').textContent=m.description;$('modeRate').textContent=bpm===null?'Not calculated':bpm+' BPM';$('modeQuality').textContent=mode==='heart'?(bpm===null?'Collecting signal':'Experimental estimate'):'Signal only';$('soundModeCaution').textContent=m.caution}
 $('analysisSource').addEventListener('change',()=>{updateAnalysisSelection();updateSelectedLevel()});
+
+let selectedCsvText='', offlineBpmPoints=[];
+function drawOfflineBpm(points,duration){
+ const cv=$('csvBpmCanvas'),ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
+ drawGrid(ctx,w,h);
+ if(!points.length){ctx.fillStyle='#91aeb8';ctx.font='15px system-ui';ctx.fillText('No valid heart-rate estimates were detected in this file.',18,30);return}
+ const vals=points.map(p=>p.bpm),lo=Math.max(20,Math.floor(Math.min(...vals)/10)*10-10),hi=Math.min(190,Math.ceil(Math.max(...vals)/10)*10+10),span=Math.max(10,hi-lo);
+ ctx.strokeStyle='#91aeb8';ctx.fillStyle='#b9d0d8';ctx.font='12px ui-monospace,monospace';
+ for(let n=0;n<=4;n++){const y=12+n*(h-42)/4,bpm=hi-n*span/4;ctx.fillText(Math.round(bpm)+' BPM',8,y+4);ctx.strokeStyle='#20384e';ctx.beginPath();ctx.moveTo(76,y);ctx.lineTo(w-12,y);ctx.stroke()}
+ ctx.strokeStyle='#63e6ad';ctx.lineWidth=3;ctx.beginPath();
+ points.forEach((p,i)=>{const x=76+(Math.max(0,Math.min(duration,p.t))/Math.max(0.001,duration))*(w-90),y=12+((hi-p.bpm)/span)*(h-42);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});
+ ctx.stroke();ctx.fillStyle='#b9d0d8';ctx.fillText('0 s',76,h-8);ctx.fillText(duration.toFixed(1)+' s',w-76,h-8);
+ points.forEach(p=>{const x=76+(Math.max(0,Math.min(duration,p.t))/Math.max(0.001,duration))*(w-90),y=12+((hi-p.bpm)/span)*(h-42);ctx.fillStyle='#63e6ad';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill()});
+}
+function analyseOfflineCsv(csvText){
+ const lines=csvText.replace(/^\uFEFF/,'').split(/\r?\n/).filter(line=>line.trim().length);
+ if(lines.length<3)throw new Error('The CSV does not contain enough sample rows.');
+ const headers=lines[0].split(',').map(x=>x.trim().toLowerCase());
+ const col=name=>headers.indexOf(name);
+ const ix=[col('mic1_adc'),col('mic2_adc'),col('mic3_adc')];
+ if(ix.some(i=>i<0))throw new Error('Required raw ADC columns were not found. Please upload an ElectroHeart CSV containing mic1_adc, mic2_adc and mic3_adc.');
+ const source=$('csvSource').value,sr=Number($('csvSampleRate').value);
+ if(!Number.isFinite(sr)||sr<1)throw new Error('Select a valid sampling rate.');
+ const rows=[];
+ for(let n=1;n<lines.length;n++){
+  const cells=lines[n].split(',');
+  const vals=ix.map(i=>Number(cells[i]));
+  if(vals.some(v=>!Number.isFinite(v)||v<0||v>4095))continue;
+  rows.push(vals);
+ }
+ if(rows.length<Math.max(10,sr*0.5))throw new Error('Not enough valid raw ADC samples were found for analysis.');
+ const selected=rows.map(v=>source==='avg'?(v[0]+v[1]+v[2])/3:v[Number(source)]);
+ let baseline=selected[0],envelope=0,noise=4,prev2=0,prev=0,lastCandidate=-1,lastBeat=-1,intervals=[],points=[];
+ for(let n=0;n<selected.length;n++){
+  const signal=selected[n]-baseline;
+  baseline+=(selected[n]-baseline)*0.002;
+  const ac=Math.abs(signal);
+  envelope+=(ac-envelope)*0.12;
+  noise+=(Math.min(envelope,40)-noise)*0.001;
+  const threshold=Math.max(8,noise*2.6),isPeak=prev>prev2&&prev>=envelope&&prev>threshold;
+  prev2=prev;prev=envelope;
+  if(!isPeak||n-lastCandidate<Math.round(sr*0.10))continue;
+  lastCandidate=n;
+  if(lastBeat>=0){
+   const interval=(n-lastBeat)/sr;
+   if(interval<0.35)continue;
+   if(interval>2.0){intervals=[]}
+   else{
+    intervals.push(interval);if(intervals.length>5)intervals.shift();
+    const sorted=[...intervals].sort((a,b)=>a-b),median=sorted[Math.floor(sorted.length/2)],bpm=Math.round(60/median);
+    if(sorted.length>=2&&bpm>=30&&bpm<=170)points.push({t:n/sr,bpm});
+   }
+  }
+  lastBeat=n;
+ }
+ offlineBpmPoints=points;
+ const bpms=points.map(p=>p.bpm),duration=selected.length/sr;
+ $('csvAvgBpm').textContent=bpms.length?Math.round(bpms.reduce((a,b)=>a+b,0)/bpms.length)+' BPM':'--';
+ $('csvMinBpm').textContent=bpms.length?Math.min(...bpms)+' BPM':'--';
+ $('csvMaxBpm').textContent=bpms.length?Math.max(...bpms)+' BPM':'--';
+ $('csvBeatCount').textContent=bpms.length.toLocaleString();
+ $('csvDuration').textContent=(duration>=60?Math.floor(duration/60)+'m '+Math.round(duration%60)+'s':duration.toFixed(1)+' s');
+ $('csvSamples').textContent=selected.length.toLocaleString();
+ $('csvGraphNote').textContent=bpms.length?'Experimental BPM estimates recalculated from '+(source==='avg'?'the average of all three raw channels':'MIC '+(Number(source)+1)+' raw ADC samples')+'.':'No valid BPM series was produced. Try another channel or check the recording signal quality.';
+ drawOfflineBpm(points,duration);
+}
+$('csvFile').addEventListener('change',async e=>{
+ const file=e.target.files&&e.target.files[0];selectedCsvText='';
+ $('csvAnalyseBtn').disabled=!file;
+ $('csvFileStatus').textContent=file?'Selected: '+file.name+' · '+(file.size/1024).toFixed(1)+' KB. Click Analyse CSV.':'No CSV selected.';
+ ['csvAvgBpm','csvMinBpm','csvMaxBpm','csvBeatCount','csvDuration','csvSamples'].forEach(id=>$(id).textContent='--');
+ drawOfflineBpm([],1);
+ if(!file)return;
+ try{selectedCsvText=await file.text();$('csvFileStatus').textContent='Loaded '+file.name+' · '+(file.size/1024).toFixed(1)+' KB. Ready for offline analysis.'}
+ catch(err){$('csvFileStatus').textContent='Could not read file: '+err.message;$('csvAnalyseBtn').disabled=true}
+});
+$('csvAnalyseBtn').addEventListener('click',()=>{
+ if(!selectedCsvText)return;
+ try{analyseOfflineCsv(selectedCsvText);$('csvFileStatus').textContent='Analysis complete · '+$('csvSamples').textContent+' raw samples processed locally in this browser.'}
+ catch(err){$('csvFileStatus').textContent='Analysis error: '+err.message}
+});
+
 $('soundMode').addEventListener('change',updateModeDashboard);
 updateAnalysisSelection();updateSelectedLevel();updateModeDashboard();
 
