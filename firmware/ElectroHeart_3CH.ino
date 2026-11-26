@@ -1,53 +1,76 @@
 #include <Arduino.h>
-#include "BluetoothSerial.h"
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
 
-// ElectroHeart 3-channel acquisition firmware
-// Target: classic ESP32 / ESP32-WROOM (Bluetooth Classic SPP supported)
-// ADC1 inputs: GPIO34, GPIO35, GPIO32
-// Binary frame: A5 5A + three uint16 little-endian ADC values
-// Sample rate: 2000 frames/second; USB baud: 921600
+// ElectroHeart BLE-only firmware for classic ESP32 / ESP32-WROOM.
+// Three PCG ADC inputs: GPIO 34, 35, 32. Sample rate: 2000 Hz.
+// Each 8-byte frame: A5 5A + three uint16 little-endian ADC values.
+// 20 frames are batched into each 160-byte BLE notification.
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error "Bluetooth Classic is not enabled. Select a classic ESP32 board (e.g. ESP32 Dev Module), not ESP32-S3."
+#error "BLE unavailable: select a classic ESP32 board such as ESP32 Dev Module, not ESP32-S3."
 #endif
 
-BluetoothSerial SerialBT;
-static constexpr uint8_t PIN_MIC1 = 34;
-static constexpr uint8_t PIN_MIC2 = 35;
-static constexpr uint8_t PIN_MIC3 = 32;
-static constexpr uint32_t SAMPLE_RATE = 2000;
-static constexpr uint32_t SAMPLE_PERIOD_US = 1000000UL / SAMPLE_RATE;
-static uint8_t packet[8] = {0xA5, 0x5A, 0, 0, 0, 0, 0, 0};
-static uint32_t nextSample = 0;
+static constexpr uint8_t PIN_MIC1=34, PIN_MIC2=35, PIN_MIC3=32;
+static constexpr uint32_t SAMPLE_RATE=2000, SAMPLE_PERIOD_US=1000000UL/SAMPLE_RATE;
+static constexpr size_t FRAME_SIZE=8, FRAMES_PER_PACKET=20, PACKET_SIZE=FRAME_SIZE*FRAMES_PER_PACKET;
+static const char* DEVICE_NAME="ElectroHeart-BLE";
+static const char* SERVICE_UUID="6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+static const char* TX_UUID="6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
-static inline void put16(uint8_t *p, uint16_t v) {
-  p[0] = (uint8_t)(v & 0xFF);
-  p[1] = (uint8_t)(v >> 8);
+BLECharacteristic* txCharacteristic=nullptr;
+uint8_t notifyBuffer[PACKET_SIZE];
+size_t notifyLength=0;
+uint32_t nextSample=0;
+bool clientConnected=false;
+
+class ServerCallbacks: public BLEServerCallbacks {
+  void onConnect(BLEServer*) override { clientConnected=true; }
+  void onDisconnect(BLEServer*) override { clientConnected=false; BLEDevice::startAdvertising(); }
+};
+
+static inline void put16(uint8_t* p,uint16_t v){p[0]=(uint8_t)(v&0xFF);p[1]=(uint8_t)(v>>8);}
+static void appendSample(){
+  uint8_t* p=&notifyBuffer[notifyLength];
+  p[0]=0xA5;p[1]=0x5A;
+  put16(p+2,(uint16_t)analogRead(PIN_MIC1));
+  put16(p+4,(uint16_t)analogRead(PIN_MIC2));
+  put16(p+6,(uint16_t)analogRead(PIN_MIC3));
+  notifyLength+=FRAME_SIZE;
 }
 
-void setup() {
+void setup(){
   analogReadResolution(12);
-  analogSetPinAttenuation(PIN_MIC1, ADC_11db);
-  analogSetPinAttenuation(PIN_MIC2, ADC_11db);
-  analogSetPinAttenuation(PIN_MIC3, ADC_11db);
-  Serial.begin(921600);
-  SerialBT.begin("ESP32-ElectroHeart");
-  nextSample = micros();
+  analogSetPinAttenuation(PIN_MIC1,ADC_11db);
+  analogSetPinAttenuation(PIN_MIC2,ADC_11db);
+  analogSetPinAttenuation(PIN_MIC3,ADC_11db);
+  BLEDevice::init(DEVICE_NAME);
+  BLEDevice::setMTU(185);
+  BLEServer* server=BLEDevice::createServer();
+  server->setCallbacks(new ServerCallbacks());
+  BLEService* service=server->createService(SERVICE_UUID);
+  txCharacteristic=service->createCharacteristic(TX_UUID,BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
+  txCharacteristic->addDescriptor(new BLE2902());
+  service->start();
+  BLEAdvertising* advertising=BLEDevice::getAdvertising();
+  advertising->addServiceUUID(SERVICE_UUID);
+  advertising->setScanResponse(true);
+  advertising->start();
+  nextSample=micros();
 }
 
-void loop() {
-  const uint32_t now = micros();
-  if ((int32_t)(now - nextSample) < 0) return;
-  nextSample += SAMPLE_PERIOD_US;
-
-  const uint16_t a = (uint16_t)analogRead(PIN_MIC1);
-  const uint16_t b = (uint16_t)analogRead(PIN_MIC2);
-  const uint16_t c = (uint16_t)analogRead(PIN_MIC3);
-  put16(&packet[2], a);
-  put16(&packet[4], b);
-  put16(&packet[6], c);
-
-  // Stream identical binary frames over USB and Bluetooth SPP.
-  Serial.write(packet, sizeof(packet));
-  SerialBT.write(packet, sizeof(packet));
+void loop(){
+  uint32_t now=micros();
+  if((int32_t)(now-nextSample)<0)return;
+  nextSample+=SAMPLE_PERIOD_US;
+  appendSample();
+  if(notifyLength>=PACKET_SIZE){
+    if(clientConnected&&txCharacteristic){
+      txCharacteristic->setValue(notifyBuffer,notifyLength);
+      txCharacteristic->notify();
+    }
+    notifyLength=0;
+  }
 }
