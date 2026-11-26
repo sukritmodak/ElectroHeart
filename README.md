@@ -36,13 +36,13 @@ If Chrome's chooser still does not show the ESP32, isolate the radio/advertising
 
 1. In Arduino IDE open `firmware/BLE_Advertising_Test/BLE_Advertising_Test.ino` (open the sketch from its own folder).
 2. Select **ESP32 Dev Module** for a classic ESP32-WROOM board and upload this test sketch.
-3. Open Serial Monitor at **115200 baud**. It should print `PASS: BLE stack initialized and advertising start() called.`
+3. Open Serial Monitor at **115200 baud**. It should print `BLE advertising start requested with the local name in the primary packet.`
 4. On an Android phone, install a BLE scanner such as nRF Connect and scan for **ElectroHeart-TEST**. Also try the Chrome dashboard on a computer with Bluetooth LE.
 5. If the phone sees ElectroHeart-TEST but Windows Chrome does not, the ESP32 is advertising; troubleshoot the Windows Bluetooth adapter/driver and Chrome permissions.
 6. If neither phone nor computer sees it, check that the selected board is a classic ESP32 with BLE support, confirm upload success, and power-cycle the board.
 7. After the test, upload the normal `firmware/ElectroHeart_3CH.ino` sketch again to restore the three-channel monitor.
 
-The test sketch does not read microphones or stream PCG data. It only advertises a minimal BLE service to test discovery. The normal firmware prints boot/advertising diagnostics to Serial Monitor at 115200 baud; this serial output is for diagnostics only, not the data stream.
+The test sketch does not read microphones or stream PCG data. It only advertises a minimal BLE service to test discovery. The normal firmware places its device name in the primary advertising packet (rather than relying on a scan response), then prints boot/advertising diagnostics to Serial Monitor at 115200 baud. This serial output is for diagnostics only, not the data stream.
 
 ## BLE protocol
 
