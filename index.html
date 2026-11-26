@@ -1,163 +1,68 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ESP32 3-Channel Heart Sound Monitor</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ElectroHeart | 3-Channel Cardiac Acoustic Monitor</title>
 <style>
-:root{color-scheme:dark;--bg:#07111f;--panel:#112238;--line:#29415c;--muted:#a8b8ca;--pink:#ff6f9f;--cyan:#58d8e8;--gold:#ffc36d}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17314c,#07111f 65%);color:#f2f7ff;font:15px system-ui,Segoe UI,Arial}
-main{max-width:1150px;margin:auto;padding:24px 16px 50px}header{text-align:center;margin:0 0 22px}h1{font-size:clamp(22px,4vw,34px);margin:0 0 6px;letter-spacing:.04em}p{color:var(--muted);line-height:1.5}
-.panel{background:linear-gradient(145deg,#14283e,#0c1a2b);border:1px solid var(--line);border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0004}
-.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button{border:1px solid #42627e;border-radius:10px;padding:11px 15px;background:#1b3855;color:white;font-weight:700;cursor:pointer}button.primary{background:#087f91;border-color:#20b8c6}button:disabled{opacity:.45;cursor:not-allowed}
-#status{margin-left:auto;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
-.channel{background:#081625;border:1px solid var(--line);border-radius:13px;padding:13px;min-width:0}.channel h3{margin:0 0 9px;font-size:15px}.channel canvas{display:block;width:100%;height:160px;background:#040d17;border-radius:8px}
-.values{display:flex;justify-content:space-between;gap:8px;margin-top:9px;font:12px ui-monospace,monospace;color:var(--muted)}.digital{font-weight:800}.on{color:#70e6a3}.off{color:#ff9a9a}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#081625;border:1px solid var(--line);border-radius:11px;padding:12px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:21px}
-.note{font-size:13px}.pill{display:inline-block;border:1px solid var(--line);border-radius:30px;padding:4px 9px;color:var(--muted);font-size:12px}
-.addon-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.addon-card{background:#081625;border:1px solid var(--line);border-radius:11px;padding:12px}.addon-card small{display:block;color:var(--muted);margin-bottom:5px}.addon-card strong{font-size:19px}select{background:#081625;color:#f2f7ff;border:1px solid #42627e;border-radius:9px;padding:10px}.tools-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}#recordStatus{color:var(--muted);font-size:13px}.mode-panel{background:#081625;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}.mode-panel h3{margin:0 0 7px}@media(max-width:760px){.addon-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}#status{width:100%;margin:4px 0 0}}
-</style>
-</head>
+:root{color-scheme:dark;--bg:#07111e;--panel:#102238;--panel2:#091827;--line:#29435e;--muted:#a9bbce;--pink:#ff709f;--cyan:#55d9e8;--gold:#ffc46b;--green:#69e6a3;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#1b3c59,#07111e 65%);color:#eef6ff;font:14px system-ui,Segoe UI,Arial}main{max-width:1420px;margin:auto;padding:22px 16px 48px}
+header{text-align:center;margin-bottom:18px}h1{font-size:clamp(24px,4vw,36px);letter-spacing:.08em;margin:0}header p{color:var(--muted);margin:7px 0}.brand{color:var(--cyan)}
+.panel{background:linear-gradient(145deg,#142b42,#0c1b2c);border:1px solid var(--line);border-radius:16px;padding:16px;margin:13px 0;box-shadow:0 12px 30px #0004}.panel h2{font-size:17px;margin:0 0 12px}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row label{color:var(--muted)}button,select,input{font:inherit}button{border:1px solid #456580;border-radius:9px;padding:10px 13px;background:#1b3a56;color:#fff;font-weight:700;cursor:pointer}button.primary{background:#087f91;border-color:#1eb5c4}button.warn{background:#593044;border-color:#98506c}button:disabled{opacity:.4;cursor:not-allowed}select,input{background:#081625;color:#f2f7ff;border:1px solid #42627e;border-radius:8px;padding:9px}#status{margin-left:auto;color:var(--muted)}.hint,.note{font-size:12px;color:var(--muted);line-height:1.5}.pill{border:1px solid var(--line);border-radius:30px;padding:5px 9px;color:var(--muted);font-size:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.channel{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}.channel h3{margin:0 0 8px;font-size:14px}.channel canvas{display:block;width:100%;height:180px;background:#030b13;border-radius:7px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.metric{background:#102238;border-radius:8px;padding:8px}.metric small{display:block;color:var(--muted);font-size:10px;letter-spacing:.05em}.metric strong{font-size:17px;font-variant-numeric:tabular-nums}.channel-foot{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--muted);font:11px ui-monospace,monospace}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}.stat small{display:block;color:var(--muted);font-size:10px;letter-spacing:.06em}.stat strong{font-size:23px;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.event-list{max-height:170px;overflow:auto;background:#081625;border:1px solid var(--line);border-radius:9px;padding:8px;font:12px ui-monospace,monospace}.event-list div{padding:4px;border-bottom:1px solid #1d3349}.good{color:var(--green)}.bad{color:var(--red)}
+@media(max-width:850px){.grid3{grid-template-columns:1fr}.two{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}#status{width:100%;margin:4px 0}}
+</style></head>
 <body><main>
-<header><h1>ESP32 HEART SOUND MONITOR</h1><p>Three microphones · Analog waveform + digital threshold status</p></header>
-
-<section class="panel">
-<h2>Connection</h2>
-<div class="controls">
-<button class="primary" id="usbBtn">Connect USB</button>
-<button id="btBtn">Connect Bluetooth</button>
-<button id="disconnectBtn" disabled>Disconnect</button>
-<span id="status">Not connected</span>
-</div>
-<p class="note">USB: use Chrome or Edge and select the ESP32 USB COM port. Bluetooth: pair ESP32-HEART-3CH in Windows, start the Python bridge on the Bluetooth outgoing COM port, then click Connect Bluetooth. Open this page directly over HTTPS; Google Sites embedded mode may block serial access.</p>
-</section>
-
-<section class="panel">
-<h2>Live microphone signals</h2>
-<div class="grid">
-<div class="channel"><h3 style="color:var(--pink)">MIC 1 · LEFT</h3><canvas id="wave1" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a1">—</b></span><span>DO: <b id="d1" class="digital">—</b></span></div></div>
-<div class="channel"><h3 style="color:var(--cyan)">MIC 2 · CENTRE</h3><canvas id="wave2" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a2">—</b></span><span>DO: <b id="d2" class="digital">—</b></span></div></div>
-<div class="channel"><h3 style="color:var(--gold)">MIC 3 · RIGHT</h3><canvas id="wave3" width="720" height="240"></canvas><div class="values"><span>AO: <b id="a3">—</b></span><span>DO: <b id="d3" class="digital">—</b></span></div></div>
-</div>
-</section>
-
-<section class="panel" id="analysisPanel"><h2>Signal analysis</h2><div class="tools-row"><label for="sourceSelect">Analysis source</label><select id="sourceSelect"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="avg">Average · all 3 microphones</option></select><span class="pill" id="sourceLabel">Selected: MIC 1 · LEFT</span><span class="pill">Selected source level: <b id="selectedDb">— dBFS</b></span></div><div class="addon-grid" style="margin-top:12px"><div class="addon-card"><small>MIC 1 RELATIVE LEVEL</small><strong id="db1">— dBFS</strong></div><div class="addon-card"><small>MIC 2 RELATIVE LEVEL</small><strong id="db2">— dBFS</strong></div><div class="addon-card"><small>MIC 3 RELATIVE LEVEL</small><strong id="db3">— dBFS</strong></div></div><p class="note">dBFS is calculated from incoming ADC samples after removing DC offset. It is a relative digital level, not calibrated sound-pressure level (dB SPL).</p></section>
-<section class="panel" id="recordPanel"><h2>Recording</h2><div class="tools-row"><button class="primary" id="startRecord">Start CSV recording</button><button id="stopRecord" disabled>Stop recording</button><button id="downloadRecord" disabled>Download CSV</button><span id="recordStatus">Not recording</span></div><div class="addon-grid" style="margin-top:12px"><div class="addon-card"><small>RECORDING TIME</small><strong id="recordTime">00:00</strong></div><div class="addon-card"><small>RECORDED ROWS</small><strong id="recordRows">0</strong></div><div class="addon-card"><small>FILE SIZE (EST.)</small><strong id="recordSize">0 B</strong></div></div><p class="note">CSV stores the original six incoming values per row. Recording starts only when you press Start.</p></section>
-<section class="panel" id="clinicalDashboards"><h2>Sound dashboards</h2><div class="tools-row"><label for="dashboardSelect">Choose dashboard</label><select id="dashboardSelect"><option value="heart">Heart sound (PCG)</option><option value="lung">Lung sound</option><option value="fetal">Fetal heart sound</option></select></div><div class="mode-panel" aria-live="polite"><h3 id="dashboardTitle">Heart sound dashboard</h3><p id="dashboardDescription">Observe the three microphone waveforms and select a source for analysis.</p><div class="addon-grid"><div class="addon-card"><small>SELECTED INPUT</small><strong id="dashboardInput">MIC 1 · LEFT</strong></div><div class="addon-card"><small>HEART / RESPIRATORY RATE</small><strong id="ratePlaceholder">Not calculated</strong></div><div class="addon-card"><small>ANALYSIS STATUS</small><strong id="analysisStatus">Signal only</strong></div></div><p class="note" id="dashboardCaution">Signal monitoring only; not a diagnostic tool.</p></div></section>
-<section class="panel">
-<div class="stats">
-<div class="stat"><small>CSV ROWS RECEIVED</small><strong id="rows">0</strong></div>
-<div class="stat"><small>DATA RATE</small><strong id="rate">0 rows/s</strong></div>
-<div class="stat"><small>CONNECTION</small><strong id="mode">—</strong></div>
-</div>
-<p class="note">BPM is not calculated by this CSV viewer. It will remain “--” until a validated heart-sound detector is implemented; no fixed BPM is fabricated.</p>
-</section>
+<header><h1><span class="brand">ELECTRO</span>HEART</h1><p>3-Channel Cardiac Acoustic Monitoring & Research Dashboard</p><span class="pill">ESP32 · PCG · LIVE SIGNAL ACQUISITION</span></header>
+<section class="panel"><h2>Device connection</h2><div class="row">
+<button class="primary" id="usbBtn">Connect USB</button><button id="btBtn">Connect Bluetooth (COM bridge)</button><button id="disconnectBtn" disabled>Disconnect</button><button id="pauseBtn" disabled>Pause graphs</button><button id="clearBtn">Clear display</button><span id="status">Not connected</span></div>
+<div class="row" style="margin-top:10px"><label>USB baud</label><select id="baud"><option value="921600" selected>921600</option><option value="115200">115200</option></select><label>Sampling rate</label><select id="sampleRate"><option value="2000" selected>2000 Hz</option><option value="4000">4000 Hz</option></select><label>Display speed</label><select id="speed"><option value="1">Normal</option><option value="0.5" selected>Slow</option><option value="0.25">Very slow</option></select><span class="pill" id="frameStatus">Received frames: 0</span></div>
+<p class="hint">USB reads the binary 8-byte frame: A5 5A + three 16-bit little-endian ADC samples (GPIO 34, 35, 32). Bluetooth Classic SPP on Windows requires the paired device's outgoing COM port exposed through the local bridge at 127.0.0.1:8765. Browser Bluetooth does not directly support Classic SPP.</p></section>
+<section class="panel"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Live PCG waveforms</h2><span class="pill">LEFT · CENTRE · RIGHT</span></div>
+<div class="grid3" style="margin-top:12px">
+<div class="channel"><h3 style="color:var(--pink)">MIC 1 · LEFT · GPIO 34</h3><canvas id="wave1" width="900" height="260"></canvas><div class="metrics"><div class="metric"><small>ADC</small><strong id="adc1">—</strong></div><div class="metric"><small>HEART RATE</small><strong id="bpm1">--</strong></div><div class="metric"><small>LEVEL</small><strong id="db1">-- dBFS</strong></div></div><div class="channel-foot"><span id="event1">S1: — · S2: —</span><span id="quality1">Waiting</span></div></div>
+<div class="channel"><h3 style="color:var(--cyan)">MIC 2 · CENTRE · GPIO 35</h3><canvas id="wave2" width="900" height="260"></canvas><div class="metrics"><div class="metric"><small>ADC</small><strong id="adc2">—</strong></div><div class="metric"><small>HEART RATE</small><strong id="bpm2">--</strong></div><div class="metric"><small>LEVEL</small><strong id="db2">-- dBFS</strong></div></div><div class="channel-foot"><span id="event2">S1: — · S2: —</span><span id="quality2">Waiting</span></div></div>
+<div class="channel"><h3 style="color:var(--gold)">MIC 3 · RIGHT · GPIO 32</h3><canvas id="wave3" width="900" height="260"></canvas><div class="metrics"><div class="metric"><small>ADC</small><strong id="adc3">—</strong></div><div class="metric"><small>HEART RATE</small><strong id="bpm3">--</strong></div><div class="metric"><small>LEVEL</small><strong id="db3">-- dBFS</strong></div></div><div class="channel-foot"><span id="event3">S1: — · S2: —</span><span id="quality3">Waiting</span></div></div></div></section>
+<section class="panel"><h2>Cardiac analysis</h2><div class="stats"><div class="stat"><small>MIC 1 BPM</small><strong id="statBpm1">--</strong></div><div class="stat"><small>MIC 2 BPM</small><strong id="statBpm2">--</strong></div><div class="stat"><small>MIC 3 BPM</small><strong id="statBpm3">--</strong></div><div class="stat"><small>CONSENSUS BPM</small><strong id="consensus">--</strong></div></div>
+<div class="row" style="margin-top:12px"><label>Analysis channel</label><select id="analysisSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="all">All channels / compare</option></select><span class="pill" id="detectorState">Detector: waiting for signal</span></div>
+<p class="note">Experimental acoustic event detector. S1 is paired to a following S2 when the interval is 100–500 ms. Heart rate is calculated from successive S1-to-S1 intervals, never from S1–S2 spacing. BPM remains blank until valid cycles are observed; this is a research prototype, not a diagnostic monitor.</p>
+<div class="two"><div><h3>Detected heart sound events</h3><div class="event-list" id="events">No detected events yet.</div></div><div><h3>Event legend</h3><p class="note"><b style="color:#ff8cae">S1 · LUB</b> — first heart sound / systolic onset<br><b style="color:#73ddeb">S2 · DUB</b> — second heart sound / end-systolic event<br><b style="color:#ffc46b">S3 / S4</b> — not labelled unless a dedicated validated detector is enabled. This version does not fabricate them.</p></div></div></section>
+<section class="panel"><h2>Live audio monitoring</h2><div class="row"><button class="primary" id="audioStart">Enable live audio</button><button id="audioStop" disabled>Mute audio</button><label>Listen to</label><select id="audioSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="mix">All 3 microphones</option></select><label>Volume</label><input id="volume" type="range" min="0" max="1" step=".05" value=".65"></div><p class="note">Audio is played from the incoming ADC samples (not a synthesized heartbeat). Browser audio is resampled for playback; quality is limited by the 2 kHz acquisition stream and microphone hardware.</p></section>
+<section class="panel"><h2>CSV recording & export</h2><div class="row"><button class="primary" id="recordBtn" disabled>Start recording</button><button id="stopRecordBtn" disabled>Stop recording</button><button id="downloadBtn" disabled>Download CSV</button><span id="recordStatus" class="pill">Not recording</span></div><div class="stats" style="margin-top:10px"><div class="stat"><small>ELAPSED</small><strong id="recordTime">00:00</strong></div><div class="stat"><small>RECORDED FRAMES</small><strong id="recordRows">0</strong></div><div class="stat"><small>DATA RATE</small><strong id="dataRate">0 fps</strong></div><div class="stat"><small>BUFFERED SIZE</small><strong id="recordSize">0 B</strong></div></div><p class="note">CSV includes timestamp, raw ADC values, digital event markers, and available channel BPM estimates.</p></section>
+<section class="panel"><h2>System information</h2><div class="row"><span class="pill">Protocol: A5 5A + 6 data bytes</span><span class="pill">3 × 12-bit ADC</span><span class="pill">ADC1: GPIO 34 / 35 / 32</span><span class="pill">Binary streaming</span></div><p class="note">Keep ESP32 Serial output binary-only while streaming. Do not print debug text to the same serial port. Ensure microphone outputs never exceed the ESP32 ADC input range (0–3.3 V).</p></section>
 </main>
-
 <script>
-const $=id=>document.getElementById(id);
-const canvases=[$('wave1'),$('wave2'),$('wave3')];
-const colors=['#ff6f9f','#58d8e8','#ffc36d'];
-const SIZE=720, buffers=[new Float32Array(SIZE),new Float32Array(SIZE),new Float32Array(SIZE)];
-let cursor=0, rows=0, active=false, serialPort=null, serialReader=null, socket=null;
-let textBuffer='', lastRate=performance.now(), lastRows=0;
-
-function setStatus(s){$('status').textContent=s}
-function addCsvLine(line){
-  const p=line.trim().split(',');
-  if(p.length!==6)return;
-  const v=p.map(x=>Number(x.trim()));
-  if(v.some(x=>!Number.isFinite(x)))return;
-  for(let i=0;i<3;i++){
-    const analog=Math.max(0,Math.min(4095,v[i*2]));
-    const digital=v[i*2+1] ? 1:0;
-    buffers[i][cursor]=analog;
-    $('a'+(i+1)).textContent=analog;
-    const d=$('d'+(i+1));d.textContent=digital?'HIGH':'LOW';d.className='digital '+(digital?'on':'off');
-  }
-  cursor=(cursor+1)%SIZE;rows++;$('rows').textContent=rows.toLocaleString();
-}
-function receiveText(s){
-  textBuffer+=s;
-  if(textBuffer.length>20000)textBuffer=textBuffer.slice(-5000);
-  const lines=textBuffer.split(/\r?\n/);textBuffer=lines.pop();
-  for(const line of lines)addCsvLine(line);
-}
-function draw(){
-  canvases.forEach((cv,i)=>{
-    const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
-    ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle='#20384f';ctx.lineWidth=1;
-    for(let n=1;n<4;n++){ctx.beginPath();ctx.moveTo(0,n*h/4);ctx.lineTo(w,n*h/4);ctx.stroke()}
-    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath();
-    for(let x=0;x<w;x++){
-      const val=buffers[i][(cursor+x)%SIZE];
-      const y=h-(val/4095)*h;
-      if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-    }ctx.stroke();
-  });
-  const now=performance.now();
-  if(now-lastRate>=1000){$('rate').textContent=Math.round((rows-lastRows)*1000/(now-lastRate))+' rows/s';lastRows=rows;lastRate=now}
-  requestAnimationFrame(draw);
-}
-requestAnimationFrame(draw);
-
-async function disconnect(){
-  active=false;
-  try{if(serialReader){await serialReader.cancel();serialReader.releaseLock();serialReader=null}}catch(e){}
-  try{if(serialPort){await serialPort.close();serialPort=null}}catch(e){}
-  try{if(socket){socket.close();socket=null}}catch(e){}
-  $('usbBtn').disabled=false;$('btBtn').disabled=false;$('disconnectBtn').disabled=true;
-  $('mode').textContent='—';setStatus('Disconnected');
-}
-$('disconnectBtn').onclick=disconnect;
-
-$('usbBtn').onclick=async()=>{
-  if(!('serial' in navigator)){setStatus('Web Serial unavailable. Open in Chrome/Edge using HTTPS.');return}
-  try{
-    serialPort=await navigator.serial.requestPort();
-    await serialPort.open({baudRate:115200});
-    active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;
-    $('mode').textContent='USB';setStatus('USB connected — receiving CSV');
-    const decoder=new TextDecoderStream();
-    const closed=serialPort.readable.pipeTo(decoder.writable);
-    serialReader=decoder.readable.getReader();
-    while(active){
-      const {value,done}=await serialReader.read();
-      if(done)break;
-      if(value)receiveText(value);
-    }
-    await closed.catch(()=>{});
-  }catch(e){setStatus('USB error: '+e.message);await disconnect()}
-};
-
-$('btBtn').onclick=()=>{
-  socket=new WebSocket('ws://127.0.0.1:8765');
-  socket.binaryType='arraybuffer';
-  socket.onopen=()=>{active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;$('mode').textContent='Bluetooth';setStatus('Bluetooth bridge connected')};
-  socket.onmessage=e=>receiveText(new TextDecoder().decode(e.data));
-  socket.onerror=()=>setStatus('Cannot reach Bluetooth bridge. Start bridge.py on this laptop.');
-  socket.onclose=()=>{if(active)disconnect()};
-};
-
-const recordState={active:false,lines:[],bytes:0,start:0,timer:null};
-const csvHeader='mic1_analog,mic1_digital,mic2_analog,mic2_digital,mic3_analog,mic3_digital';
+'use strict';
+const $=id=>document.getElementById(id), N=1200, channels=3, colors=['#ff709f','#55d9e8','#ffc46b'];
+const ring=Array.from({length:3},()=>new Float32Array(N)), events=Array.from({length:3},()=>[]);
+let cursor=0, frameCount=0, active=false, paused=false, port=null, reader=null, ws=null, parser=[], totalFrames=0, lastRateAt=performance.now(), rateFrames=0;
+let sampleCounter=0, record=false, recordStart=0, recordFrames=0, csvRows=[], audioCtx=null, audioNode=null, audioQueue=[[],[],[]], audioWrite=0;
+const det=Array.from({length:3},()=>({prev2:0,prev:0,noise:8,armed:true,lastCandidate:-1,lastS1:-1,lastS2:-1,intervals:[],bpm:null,s1:0,s2:0,peak:0}));
 const fmtBytes=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(2)+' MB';
-function selectedLabel(){const v=$('sourceSelect').value;return v==='avg'?'Average · all 3 microphones':['MIC 1 · LEFT','MIC 2 · CENTRE','MIC 3 · RIGHT'][Number(v)]}
-function updateSource(){const label=selectedLabel();$('sourceLabel').textContent='Selected: '+label;$('dashboardInput').textContent=label}
-$('sourceSelect').addEventListener('change',updateSource);
-function updateDb(){const levels=[];for(let i=0;i<3;i++){const a=buffers[i];let mean=0;for(let k=0;k<a.length;k++)mean+=a[k];mean/=a.length;let sum=0;for(let k=0;k<a.length;k++){const z=a[k]-mean;sum+=z*z}const rms=Math.sqrt(sum/a.length);levels.push(rms);const db=rms>0?20*Math.log10(rms/2047.5):-Infinity;$('db'+(i+1)).textContent=Number.isFinite(db)?db.toFixed(1)+' dBFS':'— dBFS'}const choice=$('sourceSelect').value;let selectedRms=choice==='avg'?Math.sqrt(levels.reduce((s,x)=>s+x*x,0)/3):levels[Number(choice)];const selectedDb=selectedRms>0?20*Math.log10(selectedRms/2047.5):-Infinity;$('selectedDb').textContent=Number.isFinite(selectedDb)?selectedDb.toFixed(1)+' dBFS':'— dBFS'}
-const originalAddCsvLine=addCsvLine;
-addCsvLine=function(line){const before=rows;originalAddCsvLine(line);if(rows===before)return;if(recordState.active){recordState.lines.push(line.trim());recordState.bytes+=new TextEncoder().encode(line.trim()+'\r\n').length;$('recordRows').textContent=recordState.lines.length.toLocaleString();$('recordSize').textContent=fmtBytes(recordState.bytes+csvHeader.length+2)}};
-function updateRecordClock(){if(!recordState.active)return;const sec=Math.floor((Date.now()-recordState.start)/1000);$('recordTime').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
-$('startRecord').onclick=()=>{if(recordState.active)return;recordState.active=true;recordState.lines=[];recordState.bytes=0;recordState.start=Date.now();$('recordRows').textContent='0';$('recordSize').textContent=fmtBytes(csvHeader.length+2);$('recordTime').textContent='00:00';$('startRecord').disabled=true;$('stopRecord').disabled=false;$('downloadRecord').disabled=true;$('recordStatus').textContent='Recording incoming CSV data…';recordState.timer=setInterval(updateRecordClock,250)};
-$('stopRecord').onclick=()=>{if(!recordState.active)return;updateRecordClock();recordState.active=false;clearInterval(recordState.timer);recordState.timer=null;$('startRecord').disabled=false;$('stopRecord').disabled=true;$('downloadRecord').disabled=recordState.lines.length===0;$('recordStatus').textContent=recordState.lines.length+' rows saved in this session.'};
-$('downloadRecord').onclick=()=>{if(!recordState.lines.length)return;const blob=new Blob([csvHeader+'\r\n'+recordState.lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ElectroHeart_'+new Date().toISOString().replace(/[:.]/g,'-')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)};
-const dashboardInfo={
-heart:{title:'Heart sound dashboard',description:'PCG signal view for heart-sound listening and waveform observation. Select LEFT, CENTRE, RIGHT or average for relative-level monitoring.',rate:'Not calculated',status:'Signal only',caution:'Heart rate is not estimated from this browser stream. Reliable BPM requires the ESP32 sampling frequency, timestamped samples and a validated beat detector.'},
-lung:{title:'Lung sound dashboard',description:'Observe respiratory acoustic signals across the three microphone positions. Record the six-column CSV for later signal analysis.',rate:'Not calculated',status:'Signal only',caution:'Respiratory rate and wheeze/crackle classification are not generated. This display does not diagnose lung conditions.'},
-fetal:{title:'Fetal heart sound dashboard',description:'Dedicated data-collection view for fetal-heart-sound research using the existing three-microphone input.',rate:'Not calculated',status:'Signal only',caution:'No fetal heart rate or fetal-wellbeing assessment is calculated. This prototype is not an obstetric monitor and must not guide clinical decisions.'}};
-$('dashboardSelect').addEventListener('change',()=>{const d=dashboardInfo[$('dashboardSelect').value];$('dashboardTitle').textContent=d.title;$('dashboardDescription').textContent=d.description;$('ratePlaceholder').textContent=d.rate;$('analysisStatus').textContent=d.status;$('dashboardCaution').textContent=d.caution});
-const originalDraw=draw;draw=function(){updateDb();originalDraw()};updateSource();
-
+function status(s){$('status').textContent=s}
+function setConnected(on,mode='—'){active=on;$('usbBtn').disabled=on;$('btBtn').disabled=on;$('disconnectBtn').disabled=!on;$('recordBtn').disabled=!on;$('mode')?.textContent=mode}
+function frame(a,b,c){const vals=[a,b,c];for(let i=0;i<3;i++){const v=vals[i];ring[i][cursor]=v;$('adc'+(i+1)).textContent=v;audioQueue[i].push((v-2048)/2048);if(audioQueue[i].length>8192)audioQueue[i].splice(0,4096);detect(i,v)}cursor=(cursor+1)%N;frameCount++;totalFrames++;rateFrames++;$('frameStatus').textContent='Received frames: '+totalFrames.toLocaleString();if(record){const t=(performance.now()-recordStart).toFixed(2);csvRows.push([t,a,b,c,det[0].s1,det[0].s2,det[1].s1,det[1].s2,det[2].s1,det[2].s2,det[0].bpm??'',det[1].bpm??'',det[2].bpm??''].join(','));recordFrames++;$('recordRows').textContent=recordFrames.toLocaleString();$('recordSize').textContent=fmtBytes(csvRows.join('\n').length)}}
+function detect(i,v){const d=det[i],sr=Number($('sampleRate').value),ac=Math.abs(v-2048);d.noise=d.noise*.995+Math.min(ac,80)*.005;const threshold=Math.max(35,d.noise*3.8);const peak=d.prev>d.prev2&&d.prev>=ac&&d.prev>threshold;d.prev2=d.prev;d.prev=ac;if(!peak||sampleCounter-d.lastCandidate<Math.round(sr*.12))return;d.lastCandidate=sampleCounter;d.peak=d.prev;const sinceS1=d.lastS1<0?Infinity:(sampleCounter-d.lastS1)/sr;const sinceS2=d.lastS2<0?Infinity:(sampleCounter-d.lastS2)/sr;
+if(d.lastS1<0||sinceS1>0.50){if(d.lastS1>=0&&sinceS1>=.30&&sinceS1<=2.0){d.intervals.push(sinceS1);if(d.intervals.length>7)d.intervals.shift();const sorted=[...d.intervals].sort((x,y)=>x-y),med=sorted[Math.floor(sorted.length/2)],bpm=Math.round(60/med);if(bpm>=30&&bpm<=200){d.bpm=bpm;$('bpm'+(i+1)).textContent=bpm+' BPM';$('statBpm'+(i+1)).textContent=bpm}}d.lastS1=sampleCounter;d.s1++;event(i,'S1','LUB');}
+else if(sinceS1>=.10&&sinceS1<=.50){d.lastS2=sampleCounter;d.s2++;event(i,'S2','DUB');}
+$('event'+(i+1)).textContent='S1: '+d.s1+' · S2: '+d.s2;$('quality'+(i+1)).textContent=d.intervals.length>=2?'Estimating':'Collecting';updateConsensus();}
+function event(i,type,label){const t=(sampleCounter/Number($('sampleRate').value)).toFixed(2);const list=$('events');if(list.textContent==='No detected events yet.')list.textContent='';const el=document.createElement('div');el.innerHTML='<span style="color:'+colors[i]+'">MIC '+(i+1)+'</span> · <b>'+type+' '+label+'</b> · '+t+' s';list.prepend(el);while(list.children.length>40)list.lastChild.remove();const a=events[i];a.push({t:Number(t),type});if(a.length>100)a.shift();}
+function updateConsensus(){const valid=det.map(x=>x.bpm).filter(x=>x!==null);$('consensus').textContent=valid.length?Math.round(valid.reduce((a,b)=>a+b,0)/valid.length)+' BPM':'--';$('detectorState').textContent=valid.length?'Detector: '+valid.length+' channel(s) reporting':'Detector: collecting valid S1 cycles';}
+function parseBytes(bytes){parser.push(...bytes);while(parser.length>=8){let k=parser.indexOf(0xA5);if(k<0){parser=[];break}if(k>0)parser.splice(0,k);if(parser.length<8)break;if(parser[1]!==0x5A){parser.shift();continue}const a=parser[2]|parser[3]<<8,b=parser[4]|parser[5]<<8,c=parser[6]|parser[7]<<8;parser.splice(0,8);if(a<=4095&&b<=4095&&c<=4095){frame(a,b,c);sampleCounter++}}}
+async function disconnect(){active=false;try{if(reader){await reader.cancel();reader.releaseLock();reader=null}}catch(e){}try{if(port){await port.close();port=null}}catch(e){}try{if(ws){ws.close();ws=null}}catch(e){}$('usbBtn').disabled=false;$('btBtn').disabled=false;$('disconnectBtn').disabled=true;$('pauseBtn').disabled=true;status('Disconnected');}
+$('disconnectBtn').onclick=disconnect;
+$('usbBtn').onclick=async()=>{if(!navigator.serial){status('Web Serial unavailable: open this HTTPS page in Chrome or Edge.');return}try{port=await navigator.serial.requestPort();await port.open({baudRate:Number($('baud').value)});active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;$('pauseBtn').disabled=false;status('USB connected · binary stream');const r=port.readable.getReader();reader=r;while(active){const {value,done}=await r.read();if(done)break;if(value)parseBytes(value)}}catch(e){status('USB error: '+e.message);await disconnect()}};
+$('btBtn').onclick=()=>{try{ws=new WebSocket('ws://127.0.0.1:8765');ws.binaryType='arraybuffer';ws.onopen=()=>{active=true;$('usbBtn').disabled=true;$('btBtn').disabled=true;$('disconnectBtn').disabled=false;$('pauseBtn').disabled=false;status('Bluetooth COM bridge connected')};ws.onmessage=e=>parseBytes(new Uint8Array(e.data));ws.onerror=()=>status('Bluetooth bridge not found at 127.0.0.1:8765');ws.onclose=()=>{if(active)disconnect()}}catch(e){status(e.message)}};
+$('pauseBtn').onclick=()=>{paused=!paused;$('pauseBtn').textContent=paused?'Resume graphs':'Pause graphs';};
+$('clearBtn').onclick=()=>{ring.forEach(x=>x.fill(0));cursor=0;for(let i=0;i<3;i++){det[i].intervals=[];det[i].bpm=null;$('bpm'+(i+1)).textContent='--';$('statBpm'+(i+1)).textContent='--'}$('events').textContent='No detected events yet.';updateConsensus()};
+function draw(){if(!paused){for(let i=0;i<3;i++){const cv=$('wave'+(i+1)),ctx=cv.getContext('2d'),w=cv.width,h=cv.height;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#20384e';ctx.lineWidth=1;for(let n=1;n<4;n++){ctx.beginPath();ctx.moveTo(0,n*h/4);ctx.lineTo(w,n*h/4);ctx.stroke()}ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath();const step=Number($('speed').value);for(let x=0;x<w;x++){const idx=(cursor-Math.floor(N*(1-(x/w)*step))+N*2)%N;const y=h/2-(ring[i][idx]-2048)*h/4300;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();let sum=0,mean=0;for(let k=0;k<N;k++)mean+=ring[i][k];mean/=N;for(let k=0;k<N;k++)sum+=(ring[i][k]-mean)**2;const rms=Math.sqrt(sum/N),db=rms?20*Math.log10(rms/2047):-120;$('db'+(i+1)).textContent=db.toFixed(1)+' dBFS'}}const now=performance.now();if(now-lastRateAt>=1000){$('dataRate').textContent=Math.round(rateFrames*1000/(now-lastRateAt))+' fps';rateFrames=0;lastRateAt=now}requestAnimationFrame(draw)}requestAnimationFrame(draw);
+$('audioStart').onclick=async()=>{try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume();audioNode=audioCtx.createScriptProcessor(1024,0,1);const gain=audioCtx.createGain();gain.gain.value=Number($('volume').value);audioNode.onaudioprocess=e=>{const out=e.outputBuffer.getChannelData(0),sel=$('audioSource').value;for(let n=0;n<out.length;n++){let v=0,count=0;const ids=sel==='mix'?[0,1,2]:[Number(sel)];for(const i of ids){const q=audioQueue[i];if(q.length){v+=q.shift();count++}}out[n]=count?v/count:0}};audioNode.connect(gain);gain.connect(audioCtx.destination);$('audioStart').disabled=true;$('audioStop').disabled=false}catch(e){status('Audio error: '+e.message)}};
+$('audioStop').onclick=()=>{if(audioNode){audioNode.disconnect();audioNode=null}if(audioCtx){audioCtx.close();audioCtx=null}$('audioStart').disabled=false;$('audioStop').disabled=true};
+$('volume').oninput=()=>{if(audioCtx){/* volume is applied on the next audio graph start */}};
+$('recordBtn').onclick=()=>{record=true;recordStart=performance.now();recordFrames=0;csvRows=['elapsed_ms,mic1_adc,mic2_adc,mic3_adc,mic1_s1,mic1_s2,mic2_s1,mic2_s2,mic3_s1,mic3_s2,mic1_bpm,mic2_bpm,mic3_bpm'];$('recordBtn').disabled=true;$('stopRecordBtn').disabled=false;$('recordStatus').textContent='Recording'}; 
+$('stopRecordBtn').onclick=()=>{record=false;$('recordBtn').disabled=!active;$('stopRecordBtn').disabled=true;$('downloadBtn').disabled=recordFrames===0;$('recordStatus').textContent='Stopped · '+recordFrames+' frames';};
+$('downloadBtn').onclick=()=>{const blob=new Blob([csvRows.join('\r\n')+'\r\n'],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ElectroHeart_'+new Date().toISOString().replace(/[:.]/g,'-')+'.csv';a.click();URL.revokeObjectURL(url)};
+setInterval(()=>{if(record){const s=Math.floor((performance.now()-recordStart)/1000);$('recordTime').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}},250);
 </script></body></html>
