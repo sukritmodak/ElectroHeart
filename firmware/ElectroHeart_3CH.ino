@@ -55,6 +55,7 @@ void setup(){
   txCharacteristic->addDescriptor(new BLE2902());
   service->start();
   BLEAdvertising* advertising=BLEDevice::getAdvertising();
+  advertising->setName(DEVICE_NAME); // Explicitly include the device name in BLE advertising/scan response.
   advertising->addServiceUUID(SERVICE_UUID);
   advertising->setScanResponse(true);
   advertising->start();
