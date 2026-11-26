@@ -53,7 +53,7 @@ The test sketch does not read microphones or stream PCG data. It only advertises
 
 ## Dashboard
 
-Three live PCG waveforms, raw ADC values, baseline-corrected signal plots, per-channel relative dBFS, experimental S1/S2 event markers, per-channel BPM estimates, a three-channel average-signal detector, median consensus BPM, playback from received analog samples, pause/resume, and CSV export.
+Three live PCG waveforms plotted from the original raw ADC samples (0–4095) with display-only vertical autoscaling, raw ADC values, per-channel relative dBFS, experimental S1/S2 event markers, per-channel BPM estimates, a three-channel average-signal detector, median consensus BPM, playback from received analog samples, pause/resume, and CSV export. The untouched ADC readings are preserved in the recording CSV. A separate DC-offset-corrected copy is used internally for event detection and speaker playback; no denoising or smoothing is applied to the recorded raw samples.
 
 The **Analysis channel** selector controls the selected BPM and signal-level readouts: LEFT, CENTRE, RIGHT, or the arithmetic average of the three DC-corrected channels. The average signal has its own experimental detector; averaging microphones can attenuate signals when their phases differ.
 
