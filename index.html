@@ -39,57 +39,6 @@ select,input{background:#071923;color:#effbff;border:1px solid #365767;border-ra
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 
-/* Refined fetal heart rate dashboard visual system */
-.fhr-wrap{
- --fhr-ink:#40263b;--fhr-muted:#80677b;--fhr-line:#f0d4e2;--fhr-panel:#fff;
- position:relative;isolation:isolate;overflow:hidden;color:var(--fhr-ink);
- background:
-  radial-gradient(ellipse at 92% 5%,rgba(255,184,211,.55),transparent 30%),
-  radial-gradient(ellipse at 3% 92%,rgba(225,184,238,.42),transparent 34%),
-  linear-gradient(135deg,#fff9fc 0%,#fff0f6 48%,#f9f0ff 100%);
- border:1px solid #efd2e1;border-radius:26px;padding:clamp(16px,2.5vw,30px);margin:28px 0;
- box-shadow:0 18px 55px rgba(112,53,91,.12)
-}
-.fhr-wrap:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.24;pointer-events:none;background-image:radial-gradient(#d58bad 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(120deg,black,transparent 72%)}
-.fhr-wrap *{box-sizing:border-box}
-.fhr-head{position:relative;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:clamp(17px,3vw,30px);margin:-4px -4px 20px;border-radius:20px;background:linear-gradient(115deg,#7e365f 0%,#b34f82 52%,#d77ba2 100%);box-shadow:0 12px 28px rgba(139,57,101,.2);overflow:hidden}
-.fhr-head:after{content:"♥";position:absolute;right:6%;top:-44px;font-size:180px;line-height:1;color:rgba(255,255,255,.09);pointer-events:none}
-.fhr-head>div,.fhr-head>span{position:relative;z-index:1}
-.fhr-kicker{font-size:10px;font-weight:850;letter-spacing:.19em;color:#ffe0ed}
-.fhr-wrap h2{margin:8px 0 9px;font-size:clamp(24px,3.2vw,34px);line-height:1.12;color:#fff;letter-spacing:-.025em}
-.fhr-wrap h3{margin:0 0 13px;color:#61354e;font-size:14px;font-weight:800;letter-spacing:.01em}
-.fhr-sub{color:#ffeaf2;max-width:760px;line-height:1.65;font-size:13px;margin:0}
-.fhr-pill{border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:99px;padding:9px 13px;color:#fff;font-size:10px;font-weight:850;letter-spacing:.08em;white-space:nowrap}
-.fhr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 14px}
-.fhr-card{position:relative;background:rgba(255,255,255,.88);border:1px solid var(--fhr-line);border-radius:17px;padding:16px;min-width:0;box-shadow:0 5px 17px rgba(112,53,91,.055)}
-.fhr-stat{overflow:hidden;min-height:112px}
-.fhr-stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#d56d9d,#a64c82);border-radius:4px}
-.fhr-stat small{display:block;color:#916b83;font-size:9px;font-weight:850;letter-spacing:.13em}
-.fhr-stat strong{display:block;font-size:clamp(23px,3vw,31px);line-height:1.2;color:#a43f75;margin-top:8px;font-variant-numeric:tabular-nums}
-.fhr-stat span{font-size:10px;color:var(--fhr-muted);display:block;margin-top:5px;line-height:1.4}
-.fhr-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
-.fhr-field label{display:block;color:#76516a;font-size:10px;font-weight:850;letter-spacing:.07em;margin-bottom:7px}
-.fhr-wrap select,.fhr-wrap input{width:100%;min-height:40px;background:#fff;color:#492b40;border:1px solid #e8c6d8;border-radius:10px;padding:9px 11px;outline:none;box-shadow:0 2px 5px rgba(112,53,91,.035)}
-.fhr-wrap select:focus,.fhr-wrap input:focus{border-color:#c66d9b;box-shadow:0 0 0 3px rgba(198,109,155,.14)}
-.fhr-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
-.fhr-actions button{background:linear-gradient(135deg,#a43e73,#c45f91);border:1px solid #a43e73;color:white;border-radius:10px;padding:10px 15px;font-weight:750;box-shadow:0 5px 12px rgba(164,62,115,.16);transition:transform .18s,box-shadow .18s}
-.fhr-actions button:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(164,62,115,.2)}
-.fhr-actions button.secondary{background:#fff8fc;color:#874566;border:1px solid #e5bfd2;box-shadow:none}
-.fhr-canvas{width:100%;height:225px;display:block;background:linear-gradient(180deg,#fff 0%,#fffafd 100%);border:1px solid #eed5e1;border-radius:12px;box-shadow:inset 0 1px 5px rgba(112,53,91,.035)}
-.fhr-two{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px}
-.fhr-two>.fhr-card{padding:17px}
-.fhr-note{font-size:11px;color:#80677b;line-height:1.6;margin:10px 0 0}
-.fhr-warning{border:1px solid #f1d4b7;border-left:4px solid #d18b49;background:linear-gradient(110deg,#fffaf3,#fff5ec);border-radius:12px;padding:13px 15px;color:#795239;font-size:11px;line-height:1.65;margin-top:14px}
-.fhr-quality{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:850;color:#76516a;background:#fff5fa;border:1px solid #f0d7e3;padding:7px 10px;border-radius:99px;margin-bottom:9px}
-.fhr-dot{width:9px;height:9px;border-radius:50%;background:#c47b37;display:inline-block;box-shadow:0 0 0 3px rgba(196,123,55,.13)}
-.fhr-table{width:100%;border-collapse:collapse;font-size:11px}
-.fhr-table th,.fhr-table td{text-align:left;padding:10px 8px;border-bottom:1px solid #f2e1e9}
-.fhr-table th{color:#98627d;font-weight:750;width:46%}.fhr-table td{color:#4e3547;font-weight:650}
-.fhr-wrap .fhr-card h3:before{content:"";display:inline-block;width:7px;height:7px;background:#c65f91;border-radius:50%;margin:0 8px 1px 0}
-@media(max-width:850px){.fhr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fhr-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.fhr-two{grid-template-columns:1fr}}
-@media(max-width:520px){.fhr-wrap{padding:13px;border-radius:18px}.fhr-head{padding:18px;margin:0 0 13px}.fhr-head:after{font-size:120px;right:0;top:-20px}.fhr-pill{font-size:9px}.fhr-grid{gap:8px}.fhr-stat{padding:12px;min-height:100px}.fhr-stat strong{font-size:22px}.fhr-controls{grid-template-columns:1fr}.fhr-canvas{height:190px}.fhr-two>.fhr-card{padding:13px}}
-
-
 /* SITE-WIDE GRAPHIC LAYER — visual-only; acquisition and analysis logic unchanged */
 :root{
  --visual-a:#55e0df;--visual-b:#8b9cff;--visual-c:#ff82b1;
@@ -140,18 +89,13 @@ canvas{background-image:linear-gradient(rgba(83,167,184,.055) 1px,transparent 1p
 .topbar{box-shadow:0 8px 30px rgba(0,0,0,.18)}
 .brand-mark{position:relative;overflow:hidden}
 .brand-mark:after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.2),transparent 62%);transform:rotate(18deg)}
-.fhr-wrap{box-shadow:0 20px 60px rgba(112,53,91,.17),0 0 0 5px rgba(255,255,255,.22)}
-.fhr-card{transition:transform .18s,box-shadow .18s}
-.fhr-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(112,53,91,.11)}
-.fhr-canvas{background-image:linear-gradient(rgba(202,130,164,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(202,130,164,.10) 1px,transparent 1px)!important;background-size:25px 25px!important}
-.fhr-warning{font-size:11px}
 @media(max-width:650px){.hero-copy:after{right:15px;bottom:12px;width:90px;opacity:.32}.section-heading:before{min-height:28px}}
 
 </style></head>
 <body>
 <header class="topbar">
   <div class="brand-lockup"><div class="brand-mark">♥</div><div class="brand-name">ELECTROHEART<small>3-CHANNEL CARDIAC ACOUSTIC MONITOR</small></div></div>
-  <nav class="top-nav"><a href="#liveMonitor">LIVE MONITOR</a><a href="#analysis">ANALYSIS</a><a href="#recording">RECORDINGS</a><a href="#csvAnalysis">CSV ANALYSIS</a><a href="#fhrDashboard">FETAL HEART RATE</a></nav>
+  <nav class="top-nav"><a href="#liveMonitor">LIVE MONITOR</a><a href="#analysis">ANALYSIS</a><a href="#recording">RECORDINGS</a><a href="#csvAnalysis">CSV ANALYSIS</a></nav>
   <span class="topbar-chip">ESP32 · BLE</span>
 </header>
 <main>
@@ -177,7 +121,7 @@ canvas{background-image:linear-gradient(rgba(83,167,184,.055) 1px,transparent 1p
 <div class="row" style="margin-top:12px"><label>Analysis channel</label><select id="analysisSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="avg">Average waveform · all 3</option></select><span class="pill" id="detectorState">Detector: waiting for signal</span></div>
 <p class="note">estimated acoustic event detector. S1 is paired to a following S2 when the interval is 100–500 ms. Heart rate is calculated from successive S1-to-S1 intervals, never from S1–S2 spacing. BPM remains blank until valid cycles are observed; this is a research prototype, not a diagnostic monitor.</p>
 <div class="two"><div><h3>Detected heart sound events</h3><div class="event-list" id="events">No detected events yet.</div></div><div><h3>Event legend</h3><p class="note"><b style="color:#ff8cae">S1 · LUB</b> — first heart sound / systolic onset<br><b style="color:#73ddeb">S2 · DUB</b> — second heart sound / end-systolic event<br><b style="color:#ffc46b">S3 / S4</b> — not labelled unless a dedicated validated detector is enabled. This version does not fabricate them. KY-037/KY-038 are low-cost sound modules; validate their acoustic response and signal quality before interpreting any event labels.</p></div></div></section>
-<section class="panel" id="soundDashboards"><div class="section-heading"><div><div class="eyebrow">SOUND MODES</div><h2 style="margin:0">Additional sound dashboards</h2><p>Switch between cardiac, respiratory and fetal acoustic data collection</p></div><span class="section-tag">3 MODES</span></div><div class="row"><label for="soundMode">Dashboard mode</label><select id="soundMode"><option value="heart">Heart sound · PCG</option><option value="lung">Lung sound</option><option value="fetal">Pregnancy · fetal heart sound</option></select><span class="pill" id="soundModeStatus">Heart sound monitoring</span></div><h3 id="soundModeTitle" style="margin-bottom:6px">Heart sound dashboard</h3><p class="note" id="soundModeDescription">Use the selected microphone or averaged three-channel signal for estimated heart-sound event analysis. The live waveforms above remain active.</p><div class="stats"><div class="stat"><small>SELECTED INPUT</small><strong id="modeSource">MIC 1 · LEFT</strong></div><div class="stat"><small>RATE OUTPUT</small><strong id="modeRate">--</strong></div><div class="stat"><small>STATUS</small><strong id="modeQuality">Waiting</strong></div></div><p class="note" id="soundModeCaution">Signal estimates only. estimated BPM estimates require validation against reference recordings and are not for clinical decisions.</p></section>\n<section class="panel"><h2>Live audio monitoring</h2><div class="row"><button class="primary" id="audioStart">Enable live audio</button><button id="audioStop" disabled>Mute audio</button><label>Listen to</label><select id="audioSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="mix">All 3 microphones</option></select><label>Volume</label><input id="volume" type="range" min="0" max="1" step=".05" value=".65"></div><p class="note">Audio is played from the incoming ADC samples (not a synthesized heartbeat). Only the microphone DC offset is removed for speaker playback; raw ADC samples remain unchanged in the raw-data buffer and CSV export. Browser playback uses the 2 kHz acquisition stream and microphone hardware, so fidelity is limited by both.</p></section>
+<section class="panel" id="soundDashboards"><div class="section-heading"><div><div class="eyebrow">SOUND MODES</div><h2 style="margin:0">Additional sound dashboards</h2><p>Switch between cardiac and respiratory sound data collection</p></div><span class="section-tag">2 MODES</span></div><div class="row"><label for="soundMode">Dashboard mode</label><select id="soundMode"><option value="heart">Heart sound · PCG</option><option value="lung">Lung sound</option></select><span class="pill" id="soundModeStatus">Heart sound monitoring</span></div><h3 id="soundModeTitle" style="margin-bottom:6px">Heart sound dashboard</h3><p class="note" id="soundModeDescription">Use the selected microphone or averaged three-channel signal for estimated heart-sound event analysis. The live waveforms above remain active.</p><div class="stats"><div class="stat"><small>SELECTED INPUT</small><strong id="modeSource">MIC 1 · LEFT</strong></div><div class="stat"><small>RATE OUTPUT</small><strong id="modeRate">--</strong></div><div class="stat"><small>STATUS</small><strong id="modeQuality">Waiting</strong></div></div><p class="note" id="soundModeCaution">Signal estimates only. estimated BPM estimates require validation against reference recordings and are not for clinical decisions.</p></section>\n<section class="panel"><h2>Live audio monitoring</h2><div class="row"><button class="primary" id="audioStart">Enable live audio</button><button id="audioStop" disabled>Mute audio</button><label>Listen to</label><select id="audioSource"><option value="0">MIC 1 · LEFT</option><option value="1">MIC 2 · CENTRE</option><option value="2">MIC 3 · RIGHT</option><option value="mix">All 3 microphones</option></select><label>Volume</label><input id="volume" type="range" min="0" max="1" step=".05" value=".65"></div><p class="note">Audio is played from the incoming ADC samples (not a synthesized heartbeat). Only the microphone DC offset is removed for speaker playback; raw ADC samples remain unchanged in the raw-data buffer and CSV export. Browser playback uses the 2 kHz acquisition stream and microphone hardware, so fidelity is limited by both.</p></section>
 <section class="panel" id="recording"><div class="section-heading"><div><div class="eyebrow">SESSION DATA</div><h2 style="margin:0">CSV recording & export</h2><p>Capture incoming samples and export your session for offline analysis</p></div><span class="section-tag">DATA EXPORT</span></div><div class="row"><button class="primary" id="recordBtn" disabled>Start recording</button><button id="stopRecordBtn" disabled>Stop recording</button><button id="downloadBtn" disabled>Download CSV</button><span id="recordStatus" class="pill">Not recording</span></div><div class="stats" style="margin-top:10px"><div class="stat"><small>ELAPSED</small><strong id="recordTime">00:00</strong></div><div class="stat"><small>RECORDED FRAMES</small><strong id="recordRows">0</strong></div><div class="stat"><small>DATA RATE</small><strong id="dataRate">0 fps</strong></div><div class="stat"><small>BUFFERED SIZE</small><strong id="recordSize">0 B</strong></div></div><p class="note">CSV preserves the original raw ADC readings from all three microphones, alongside elapsed time, detected event counts and estimated BPM estimates. No denoising or smoothing is applied to the recorded ADC samples.</p></section>
 <section class="panel" id="csvAnalysis">
   <div class="section-heading"><div><div class="eyebrow">OFFLINE SESSION REVIEW</div><h2 style="margin:0">CSV heart-rate analysis</h2><p>Upload a previously downloaded ElectroHeart CSV and analyse it later without connecting the ESP32.</p></div><span class="section-tag">OFFLINE ANALYSIS</span></div>
@@ -201,51 +145,7 @@ canvas{background-image:linear-gradient(rgba(83,167,184,.055) 1px,transparent 1p
 </section>
 <section class="panel" id="systemInfo"><div class="section-heading"><div><div class="eyebrow">HARDWARE & CONNECTION</div><h2 style="margin:0">System information</h2><p>Current acquisition interface and sensor configuration</p></div><span class="section-tag">ESP32 · BLE</span></div><div class="row"><span class="pill">BLE notify · 16-byte packet / 2 frames</span><span class="pill">3 × 12-bit ADC</span><span class="pill">BLE service: 6e400001…</span><span class="pill">BLE notifications</span></div><p class="note">Bluetooth data is sent directly from the ESP32 over BLE. Connect each microphone AO pin to its own ESP32 ADC input (GPIO 34, 35, 32). Power modules from 3.3 V, share GND, and keep AO within 0–3.3 V. The dashboard tracks each module's DC bias automatically.</p></section>
 
-<section id="fhrDashboard" class="fhr-wrap">
- <div class="fhr-head">
-  <div><div class="fhr-kicker">FETAL ACOUSTIC MONITORING · fPCG</div><h2>Fetal Heart Rate Dashboard</h2>
-   <p class="fhr-sub">Three-channel fetal-acoustic monitoring workspace using the connected ElectroHeart microphones. Select an acoustic input, optionally nominate a noise-reference channel, compare raw and processed signals, and inspect estimated beat timing.</p></div>
-  <span class="fhr-pill">estimated MODE · NOT CLINICAL</span>
- </div>
- <div class="fhr-grid">
-  <div class="fhr-card fhr-stat"><small>estimated FHR</small><strong id="fhrBpm">--</strong><span id="fhrBpmState">Waiting for acquisition</span></div>
-  <div class="fhr-card fhr-stat"><small>INTER-BEAT INTERVAL</small><strong id="fhrIbi">--</strong><span>milliseconds · estimated</span></div>
-  <div class="fhr-card fhr-stat"><small>SIGNAL QUALITY</small><strong id="fhrQuality">--</strong><span id="fhrQualityText">No live samples</span></div>
-  <div class="fhr-card fhr-stat"><small>BEAT CANDIDATES</small><strong id="fhrBeats">0</strong><span id="fhrElapsed">0 seconds analysed</span></div>
- </div>
- <div class="fhr-card">
-  <h3>Acquisition system &amp; processing controls</h3>
-  <div class="fhr-controls">
-   <div class="fhr-field"><label for="fhrInput">FETAL-ACOUSTIC INPUT</label><select id="fhrInput"><option value="0">MIC 1 · LEFT · GPIO 34</option><option value="1">MIC 2 · CENTRE · GPIO 35</option><option value="2">MIC 3 · RIGHT · GPIO 32</option></select></div>
-   <div class="fhr-field"><label for="fhrReference">NOISE-REFERENCE CHANNEL</label><select id="fhrReference"><option value="-1">OFF · single-channel</option><option value="0">MIC 1 · GPIO 34</option><option value="1">MIC 2 · GPIO 35</option><option value="2">MIC 3 · GPIO 32</option></select></div>
-   <div class="fhr-field"><label for="fhrFilter">DIGITAL FILTER</label><select id="fhrFilter"><option value="band">FPCG band-pass · 20–150 Hz</option><option value="wide">Wide acoustic · 10–250 Hz</option><option value="off">Filter off · baseline removed</option></select></div>
-   <div class="fhr-field"><label for="fhrDenoise">NOISE REDUCTION</label><select id="fhrDenoise"><option value="adaptive">Adaptive reference cancellation</option><option value="smooth">Envelope smoothing only</option><option value="off">Off</option></select></div>
-   <div class="fhr-field"><label for="fhrNotch">50 Hz MAINS HUM FILTER</label><select id="fhrNotch"><option value="on">50 Hz notch · enabled</option><option value="off">Disabled</option></select></div>
-  </div>
-  <div class="fhr-actions"><button id="fhrStart">Start FHR analysis</button><button id="fhrStop" class="secondary">Pause FHR analysis</button><button id="fhrReset" class="secondary">Reset analysis</button><button id="fhrExport" class="secondary">Export FHR CSV</button></div>
-  <p class="fhr-note" id="fhrAcqStatus">Connect the ESP32 using the main ElectroHeart connection panel first. The acquisition stream is the existing 3-channel, 2 kHz-per-channel ADC stream; this module does not add a Doppler sensor or alter firmware.</p>
- </div>
- <div class="fhr-two" style="margin-top:12px">
-  <div class="fhr-card"><h3>Acquired acoustic signal · raw baseline-corrected</h3><canvas id="fhrRawCanvas" class="fhr-canvas" width="1000" height="240"></canvas><p class="fhr-note">Selected microphone signal before the FHR noise-reduction stage.</p></div>
-  <div class="fhr-card"><h3>Processed signal · filtered / denoised</h3><canvas id="fhrProcessedCanvas" class="fhr-canvas" width="1000" height="240"></canvas><p class="fhr-note">estimated digital processing output. Raw ADC samples in the original dashboard and CSV remain untouched.</p></div>
- </div>
- <div class="fhr-two" style="margin-top:12px">
-  <div class="fhr-card"><h3>FHR trend · estimated BPM</h3><canvas id="fhrTrendCanvas" class="fhr-canvas" width="1000" height="240"></canvas><p class="fhr-note">Trend points are generated only when the beat-candidate interval detector accepts a sequence.</p></div>
-  <div class="fhr-card"><h3>Acquisition &amp; signal-quality monitor</h3>
-   <div class="fhr-quality"><i class="fhr-dot" id="fhrQualityDot"></i><span id="fhrQualityDetail">Waiting for microphone samples</span></div>
-   <table class="fhr-table"><tbody>
-    <tr><th>Input channel</th><td id="fhrInputName">MIC 1 · GPIO 34</td></tr>
-    <tr><th>Sampling rate</th><td>2,000 samples/s/channel (firmware setting)</td></tr>
-    <tr><th>ADC range</th><td id="fhrAdcRange">--</td></tr>
-    <tr><th>Processed RMS</th><td id="fhrRms">--</td></tr>
-    <tr><th>Noise reference</th><td id="fhrRefName">OFF</td></tr>
-    <tr><th>Last accepted interval</th><td id="fhrLastInterval">--</td></tr>
-   </tbody></table>
-   <p class="fhr-note">Signal-quality status checks clipping, flatline/dropout and signal amplitude. It does not certify fetal origin or clinical accuracy.</p>
-  </div>
- </div>
- <div class="fhr-warning"><strong>Important safety limitation:</strong> This fetal-acoustic feature uses general-purpose KY-037/KY-038 microphone modules and has not been clinically validated. It is not a fetal Doppler/CTG device, has not been validated on real fetal recordings, may detect maternal sounds or noise, and must not be used for pregnancy monitoring, diagnosis, reassurance, or treatment decisions. Do not use its BPM value to assess fetal wellbeing.</div>
-</section>
+
 
 </main>
 <script>
@@ -258,7 +158,7 @@ const det=Array.from({length:4},()=>({prev2:0,prev:0,envelope:0,noise:4,lastCand
 const fmtBytes=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(2)+' MB';
 function status(s){$('status').textContent=s}
 function setConnected(on){active=on;$('btBtn').disabled=on;$('disconnectBtn').disabled=!on;$('pauseBtn').disabled=!on;$('recordBtn').disabled=!on;}
-function frame(a,b,c){const vals=[a,b,c],centered=[];if(window.electroHeartFhrProcess)window.electroHeartFhrProcess(vals);for(let i=0;i<3;i++){const v=vals[i];if(dcBaseline[i]===null)dcBaseline[i]=v;dcBaseline[i]+=(v-dcBaseline[i])*0.002;const signal=v-dcBaseline[i];centered.push(signal);rawRing[i][cursor]=v;ring[i][cursor]=signal;channelSamples[i]++;$('adc'+(i+1)).textContent=v;$('baseline'+(i+1)).textContent=Math.round(dcBaseline[i]);$('envelope'+(i+1)).textContent=Math.round(Math.abs(signal));if(audioNode){audioQueue[i].push(Math.max(-1,Math.min(1,signal/700)));if(audioQueue[i].length>4096)audioQueue[i].splice(0,2048);}detect(i,signal)}detect(3,(centered[0]+centered[1]+centered[2])/3);cursor=(cursor+1)%N;frameCount++;totalFrames++;rateFrames++;$('frameStatus').textContent='Received frames: '+totalFrames.toLocaleString();if(record){const t=(performance.now()-recordStart).toFixed(2);const row=[t,a,b,c,dcBaseline[0],dcBaseline[1],dcBaseline[2],Math.abs(centered[0]),Math.abs(centered[1]),Math.abs(centered[2]),det[0].s1,det[0].s2,det[1].s1,det[1].s2,det[2].s1,det[2].s2,det[3].s1,det[3].s2,det[0].bpm??'',det[1].bpm??'',det[2].bpm??'',det[3].bpm??''].join(',');csvRows.push(row);recordFrames++;recordBytes+=row.length+2;if(recordFrames%200===0){$('recordRows').textContent=recordFrames.toLocaleString();$('recordSize').textContent=fmtBytes(recordBytes)}}}
+function frame(a,b,c){const vals=[a,b,c],centered=[];for(let i=0;i<3;i++){const v=vals[i];if(dcBaseline[i]===null)dcBaseline[i]=v;dcBaseline[i]+=(v-dcBaseline[i])*0.002;const signal=v-dcBaseline[i];centered.push(signal);rawRing[i][cursor]=v;ring[i][cursor]=signal;channelSamples[i]++;$('adc'+(i+1)).textContent=v;$('baseline'+(i+1)).textContent=Math.round(dcBaseline[i]);$('envelope'+(i+1)).textContent=Math.round(Math.abs(signal));if(audioNode){audioQueue[i].push(Math.max(-1,Math.min(1,signal/700)));if(audioQueue[i].length>4096)audioQueue[i].splice(0,2048);}detect(i,signal)}detect(3,(centered[0]+centered[1]+centered[2])/3);cursor=(cursor+1)%N;frameCount++;totalFrames++;rateFrames++;$('frameStatus').textContent='Received frames: '+totalFrames.toLocaleString();if(record){const t=(performance.now()-recordStart).toFixed(2);const row=[t,a,b,c,dcBaseline[0],dcBaseline[1],dcBaseline[2],Math.abs(centered[0]),Math.abs(centered[1]),Math.abs(centered[2]),det[0].s1,det[0].s2,det[1].s1,det[1].s2,det[2].s1,det[2].s2,det[3].s1,det[3].s2,det[0].bpm??'',det[1].bpm??'',det[2].bpm??'',det[3].bpm??''].join(',');csvRows.push(row);recordFrames++;recordBytes+=row.length+2;if(recordFrames%200===0){$('recordRows').textContent=recordFrames.toLocaleString();$('recordSize').textContent=fmtBytes(recordBytes)}}}
 function detect(i,v){
  const d=det[i],sr=Number($('sampleRate').value),ac=Math.abs(v);
  // Detection uses a short envelope only; rawRing and CSV samples remain untouched.
@@ -371,7 +271,7 @@ $('downloadBtn').onclick=()=>{const blob=new Blob([csvRows.join('\r\n')+'\r\n'],
 
 function updateAnalysisSelection(){const source=$('analysisSource').value,idx=source==='avg'?3:Number(source),labels=['MIC 1 · LEFT','MIC 2 · CENTRE','MIC 3 · RIGHT','AVERAGE · ALL 3'];const bpm=det[idx].bpm;$('selectedBpm').textContent=bpm===null?'--':bpm+' BPM';$('modeSource').textContent=labels[idx];updateModeDashboard()}
 function updateSelectedLevel(){const source=$('analysisSource').value,idx=source==='avg'?3:Number(source);let mean=0,sum=0;for(let k=0;k<N;k++){const value=idx===3?(ring[0][k]+ring[1][k]+ring[2][k])/3:ring[idx][k];mean+=value}mean/=N;for(let k=0;k<N;k++){const value=idx===3?(ring[0][k]+ring[1][k]+ring[2][k])/3:ring[idx][k];sum+=(value-mean)*(value-mean)}const rms=Math.sqrt(sum/N),db=rms>0?20*Math.log10(rms/2047):-120;$('selectedLevel').textContent=db.toFixed(1)+' dBFS'}
-const soundModes={heart:{title:'Heart sound dashboard',status:'PCG · cardiac acoustic signal',description:'Use LEFT, CENTRE, RIGHT or the arithmetic average of the three DC-corrected microphone signals. The average channel has its own estimated S1/S2 detector.',rate:()=>det[$('analysisSource').value==='avg'?3:Number($('analysisSource').value)].bpm,caution:'Heart-rate values are estimated acoustic estimates, not clinically validated. Check against a reference ECG or validated monitor before any research interpretation.'},lung:{title:'Lung sound dashboard',status:'Respiratory acoustic signal',description:'The three microphone waveforms remain live. Select a single microphone or the average signal to inspect and record respiratory sounds for offline analysis.',rate:()=>null,caution:'Respiratory rate, wheeze, crackle and disease classification are not implemented. No lung diagnosis or respiratory-rate measurement is provided.'},fetal:{title:'Fetal heart sound dashboard',status:'Fetal acoustic data collection',description:'Use this view only for supervised research data collection from the existing acoustic channels. The selected microphone or average waveform can be recorded to CSV.',rate:()=>null,caution:'Fetal heart rate and fetal-wellbeing assessment are not implemented. This prototype is not an obstetric monitor and must never guide pregnancy or treatment decisions.'}};
+const soundModes={heart:{title:'Heart sound dashboard',status:'PCG · cardiac acoustic signal',description:'Use LEFT, CENTRE, RIGHT or the arithmetic average of the three DC-corrected microphone signals. The average channel has its own estimated S1/S2 detector.',rate:()=>det[$('analysisSource').value==='avg'?3:Number($('analysisSource').value)].bpm,caution:'Heart-rate values are estimated acoustic estimates, not clinically validated. Check against a reference ECG or validated monitor before any research interpretation.'},lung:{title:'Lung sound dashboard',status:'Respiratory acoustic signal',description:'The three microphone waveforms remain live. Select a single microphone or the average signal to inspect and record respiratory sounds for offline analysis.',rate:()=>null,caution:'Respiratory rate, wheeze, crackle and disease classification are not implemented. No lung diagnosis or respiratory-rate measurement is provided.'}};
 function updateModeDashboard(){const mode=$('soundMode').value,m=soundModes[mode],bpm=m.rate();$('soundModeTitle').textContent=m.title;$('soundModeStatus').textContent=m.status;$('soundModeDescription').textContent=m.description;$('modeRate').textContent=bpm===null?'Not calculated':bpm+' BPM';$('modeQuality').textContent=mode==='heart'?(bpm===null?'Collecting signal':'estimated estimate'):'Signal only';$('soundModeCaution').textContent=m.caution}
 $('analysisSource').addEventListener('change',()=>{updateAnalysisSelection();updateSelectedLevel()});
 
@@ -461,116 +361,6 @@ updateAnalysisSelection();updateSelectedLevel();updateModeDashboard();
 
 setInterval(()=>{if(record){const s=Math.floor((performance.now()-recordStart)/1000);$('recordTime').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}},250);
 
-/* Additive estimated fetal-acoustic processing. Original acquisition/raw buffers are not modified. */
-(()=>{
- const SR=2000, CAP=1800, raw=new Float32Array(CAP), processed=new Float32Array(CAP), trend=[];
- let pos=0, seen=0, running=false, base=0, hpPrevX=0,hpPrevY=0,lp=0,refBase=0,refHpX=0,refHpY=0,refLp=0,lmsWeight=0,notchX1=0,notchX2=0,notchY1=0,notchY2=0;
- let env=0,prevEnv=0,prevPrevEnv=0,noiseFloor=2,lastPeak=-1,lastBeat=-1,ibi=[],beatCount=0,startAt=0,lastAccepted=null,rawMin=4095,rawMax=0,absSum=0,sqSum=0,qualityTicks=0;
- const el=id=>document.getElementById(id), channelName=i=>['MIC 1 · GPIO 34','MIC 2 · GPIO 35','MIC 3 · GPIO 32'][i];
- const alpha=(hz)=>1-Math.exp(-2*Math.PI*hz/SR);
- function resetFilters(){base=0;hpPrevX=0;hpPrevY=0;lp=0;refBase=0;refHpX=0;refHpY=0;refLp=0;lmsWeight=0;notchX1=notchX2=notchY1=notchY2=0;env=prevEnv=prevPrevEnv=0;noiseFloor=2;lastPeak=lastBeat=-1;ibi=[];beatCount=0;lastAccepted=null;trend.length=0;pos=seen=0;rawMin=4095;rawMax=0;absSum=sqSum=0;startAt=performance.now()}
- function filterSample(x,reference){
-  const mode=el('fhrFilter').value;
-  const cutoff=mode==='wide'?10:20, low=mode==='wide'?250:150;
-  const hpA=Math.exp(-2*Math.PI*cutoff/SR);
-  let hp=hpA*(hpPrevY+x-hpPrevX);hpPrevX=x;hpPrevY=hp;
-  lp+=alpha(mode==='off'?450:low)*(hp-lp);
-  if(mode==='off')return x;
-  return lp;
- }
- function applyNotch(x){\n  if(el('fhrNotch').value==='off')return x;\n  const w0=2*Math.PI*50/SR,Q=25,a=Math.sin(w0)/(2*Q),b0=1/(1+a),b1=-2*Math.cos(w0)/(1+a),b2=b0,a1=b1,a2=(1-a)/(1+a);\n  const y=b0*x+b1*notchX1+b2*notchX2-a1*notchY1-a2*notchY2;notchX2=notchX1;notchX1=x;notchY2=notchY1;notchY1=y;return y;\n }\n function referenceFilter(x){
-  const hpA=Math.exp(-2*Math.PI*20/SR),hp=hpA*(refHpY+x-refHpX);refHpX=x;refHpY=hp;refLp+=alpha(150)*(hp-refLp);return refLp;
- }
- function processSample(vals){
-  if(!running)return;
-  const ch=Number(el('fhrInput').value),ref=Number(el('fhrReference').value),rawAdc=vals[ch];
-  base+=(rawAdc-base)*0.002;const x=rawAdc-base;
-  let y=filterSample(x);
-  if(ref>=0&&ref!==ch&&el('fhrDenoise').value==='adaptive'){
-   const rb=vals[ref];refBase+=(rb-refBase)*0.002;const r=referenceFilter(rb-refBase);
-   const mu=0.025/(1+r*r/2500);lmsWeight+=mu*y*r;
-   lmsWeight=Math.max(-3,Math.min(3,lmsWeight));
-   y-=lmsWeight*r;
-  }
-  const den=el('fhrDenoise').value;
-  if(den==='smooth'||den==='adaptive'){const magnitude=Math.abs(y);env+=(magnitude-env)*0.025;}
-  const out=den==='off'?y:(Math.sign(y)*Math.max(0,Math.abs(y)-Math.max(0,noiseFloor*0.18)));
-  if(den!=='off')noiseFloor+=(Math.min(Math.abs(out),25)-noiseFloor)*0.001;
-  raw[pos]=x;processed[pos]=out;pos=(pos+1)%CAP;seen++;
-  rawMin=Math.min(rawMin,rawAdc);rawMax=Math.max(rawMax,rawAdc);absSum+=Math.abs(out);sqSum+=out*out;qualityTicks++;
-  const detectorValue=den==='smooth'?env:Math.abs(out);
-  env+=(detectorValue-env)*0.06;
-  const threshold=Math.max(4,noiseFloor*2.4);
-  const peak=prevEnv>prevPrevEnv&&prevEnv>=env&&prevEnv>threshold;
-  prevPrevEnv=prevEnv;prevEnv=env;
-  if(peak&&seen-lastPeak>SR*0.12){
-   lastPeak=seen;
-   if(lastBeat>=0){
-    const interval=(seen-lastBeat)/SR;
-    if(interval>=0.25&&interval<=1.2){
-     ibi.push(interval);if(ibi.length>5)ibi.shift();
-     const sorted=[...ibi].sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)],bpm=60/med;
-     if(sorted.length>=2&&bpm>=50&&bpm<=240){
-      lastAccepted=interval;beatCount++;trend.push({t:(performance.now()-startAt)/1000,bpm});
-      if(trend.length>180)trend.shift();
-     }
-    }else if(interval>1.2){ibi=[]}
-   }
-   lastBeat=seen;
-  }
-  if(qualityTicks>=SR/5){updateQuality(rawAdc);qualityTicks=0;updateStats()}
-  if(seen%40===0)drawAll();
- }
- function updateQuality(adc){
-  const range=rawMax-rawMin,rms=Math.sqrt(sqSum/Math.max(1,SR/5));
-  let q='POOR',detail='Low or unstable acoustic signal',color='#c94f54';
-  if(adc<=4||adc>=4091){q='CHECK ADC';detail='ADC near clipping rail';}
-  else if(range<3){q='DROPOUT';detail='Near-flat signal / possible disconnection';}
-  else if(range>8&&rms>1.5){q='SIGNAL';detail='Acoustic activity detected · fetal origin unknown';color='#2c9c75'}
-  el('fhrQuality').textContent=q;el('fhrQualityText').textContent=detail;el('fhrQualityDetail').textContent=detail;el('fhrQualityDot').style.background=color;
-  el('fhrAdcRange').textContent=rawMin+'–'+rawMax+' ADC';el('fhrRms').textContent=rms.toFixed(2)+' ADC';
-  rawMin=4095;rawMax=0;absSum=sqSum=0;
- }
- function updateStats(){
-  const last=trend.length?trend[trend.length-1]:null;
-  el('fhrBpm').textContent=last?Math.round(last.bpm)+' BPM':'--';
-  el('fhrBpmState').textContent=last?'estimated estimate · not validated':'Collecting candidate beats';
-  el('fhrIbi').textContent=lastAccepted?Math.round(lastAccepted*1000)+' ms':'--';
-  el('fhrBeats').textContent=String(beatCount);
-  el('fhrElapsed').textContent=Math.floor((performance.now()-startAt)/1000)+' seconds analysed';
-  el('fhrLastInterval').textContent=lastAccepted?(lastAccepted*1000).toFixed(0)+' ms':'--';
- }
- function plot(id,data,color,scaleAbs){
-  const cv=el(id),ctx=cv.getContext('2d'),w=cv.width,h=cv.height;ctx.clearRect(0,0,w,h);
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#f3dce6';ctx.lineWidth=1;
-  for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(0,i*h/5);ctx.lineTo(w,i*h/5);ctx.stroke()}
-  if(seen<2){ctx.fillStyle='#a77b8f';ctx.font='16px system-ui';ctx.fillText('Waiting for live samples…',18,30);return}
-  const n=Math.min(seen,CAP),start=(pos-n+CAP)%CAP;let max=scaleAbs?5:1;
-  for(let i=0;i<n;i++){const v=data[(start+i)%CAP];max=Math.max(max,Math.abs(v))}
-  max=Math.max(max*1.15,5);ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.beginPath();
-  for(let i=0;i<n;i++){const x=i/(n-1)*(w-12)+6,y=h/2-data[(start+i)%CAP]/max*(h*.42);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();
- }
- function drawTrend(){
-  const cv=el('fhrTrendCanvas'),ctx=cv.getContext('2d'),w=cv.width,h=cv.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#f3dce6';
-  for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(0,i*h/5);ctx.lineTo(w,i*h/5);ctx.stroke()}
-  if(!trend.length){ctx.fillStyle='#a77b8f';ctx.font='16px system-ui';ctx.fillText('No accepted beat intervals yet.',18,30);return}
-  const lo=Math.max(40,Math.floor(Math.min(...trend.map(p=>p.bpm))-10)),hi=Math.min(250,Math.ceil(Math.max(...trend.map(p=>p.bpm))+10)),t0=trend[0].t,t1=Math.max(t0+1,trend[trend.length-1].t);
-  ctx.strokeStyle='#bf4d83';ctx.lineWidth=2.8;ctx.beginPath();trend.forEach((p,i)=>{const x=18+(p.t-t0)/(t1-t0)*(w-36),y=h-18-(p.bpm-lo)/(hi-lo)*(h-36);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();
- }
- function drawAll(){plot('fhrRawCanvas',raw,'#cf6a9a',false);plot('fhrProcessedCanvas',processed,'#a23d78',false);drawTrend()}
- el('fhrStart').onclick=()=>{running=true;el('fhrAcqStatus').textContent='FHR analysis running on the selected live microphone channel.'};
- el('fhrStop').onclick=()=>{running=false;el('fhrAcqStatus').textContent='FHR analysis paused. Main ElectroHeart acquisition continues unchanged.'};
- el('fhrReset').onclick=()=>{resetFilters();['fhrBpm','fhrIbi'].forEach(id=>el(id).textContent='--');el('fhrBeats').textContent='0';el('fhrQuality').textContent='--';el('fhrQualityText').textContent='Reset · waiting for samples';drawAll()};
- el('fhrInput').onchange=()=>{resetFilters();el('fhrInputName').textContent=channelName(Number(el('fhrInput').value));el('fhrAcqStatus').textContent='Input changed. Collecting a new signal window.';drawAll()};
- el('fhrReference').onchange=()=>{lmsWeight=0;refBase=refHpX=refHpY=refLp=0;const r=Number(el('fhrReference').value);el('fhrRefName').textContent=r<0?'OFF':channelName(r);};
- ['fhrFilter','fhrDenoise','fhrNotch'].forEach(id=>el(id).onchange=()=>{resetFilters();el('fhrAcqStatus').textContent='Processing setting changed. New analysis window started.'});
- el('fhrExport').onclick=()=>{
-  const rows=['elapsed_seconds,estimated_bpm,interbeat_interval_ms,beat_candidates'];
-  trend.forEach((p,i)=>rows.push([p.t.toFixed(3),p.bpm.toFixed(2),i?Math.round((p.t-trend[i-1].t)*1000):'',beatCount].join(',')));
-  const blob=new Blob([rows.join('\n')+'\n'],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ElectroHeart_FHR_Session_Analysis.csv';a.click();URL.revokeObjectURL(url);
- };
- resetFilters();drawAll();
- window.electroHeartFhrProcess=processSample;
-})();
+
 
 </script></body></html>
