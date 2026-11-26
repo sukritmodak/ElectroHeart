@@ -8,7 +8,7 @@
 // Three KY-037/KY-038 analog outputs (AO): GPIO 34, 35, 32. Sample rate: 2000 Hz.
 // Power microphone modules from 3.3 V, share GND, and never exceed 3.3 V on AO.
 // Each 8-byte frame: A5 5A + three uint16 little-endian ADC values.
-// Two frames are batched into each 16-byte BLE notification so it works with the default BLE ATT MTU (23 bytes).
+// Two frames are batched into each 16-byte BLE notification (within the default ATT MTU).
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error "BLE unavailable: select a classic ESP32 board such as ESP32 Dev Module, not ESP32-S3."
@@ -62,18 +62,12 @@ void setup(){
   txCharacteristic->addDescriptor(new BLE2902());
   service->start();
   BLEAdvertising* advertising=BLEDevice::getAdvertising();
-  // Put the complete local name in the primary advertisement and the
-  // 128-bit service UUID in the scan response to avoid packet-size overflow.
-  BLEAdvertisementData primaryAdvertisement;
-  primaryAdvertisement.setFlags(0x06);
-  primaryAdvertisement.setName(DEVICE_NAME);
-  BLEAdvertisementData scanResponse;
-  scanResponse.setCompleteServices(BLEUUID(SERVICE_UUID));
-  advertising->setAdvertisementData(primaryAdvertisement);
-  advertising->setScanResponseData(scanResponse);
-  advertising->setScanResponse(true);
+  // Advertise the local name directly in the primary packet.
+  // The dashboard uses acceptAllDevices and discovers the GATT service after selection.
+  // This avoids depending on scan-response support in the host scanner.
+  advertising->setScanResponse(false);
   advertising->start();
-  Serial.println("BLE advertising started");
+  Serial.println("BLE advertising start requested (primary local name enabled).");
   Serial.println("Open Chrome dashboard and choose ElectroHeart-BLE");
   nextSample=micros();
 }
