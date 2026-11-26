@@ -5,7 +5,8 @@
 #include <BLE2902.h>
 
 // ElectroHeart BLE-only firmware for classic ESP32 / ESP32-WROOM.
-// Three KY-037/KY-038 analog outputs (AO): GPIO 34, 35, 32. Sample rate: 2000 Hz.\n// Power microphone modules from 3.3 V, share GND, and never exceed 3.3 V on AO.
+// Three KY-037/KY-038 analog outputs (AO): GPIO 34, 35, 32. Sample rate: 2000 Hz.
+// Power microphone modules from 3.3 V, share GND, and never exceed 3.3 V on AO.
 // Each 8-byte frame: A5 5A + three uint16 little-endian ADC values.
 // Two frames are batched into each 16-byte BLE notification so it works with the default BLE ATT MTU (23 bytes).
 
@@ -27,8 +28,8 @@ uint32_t nextSample=0;
 bool clientConnected=false;
 
 class ServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer*) override { clientConnected=true; notifyLength=0; }
-  void onDisconnect(BLEServer*) override { clientConnected=false; notifyLength=0; BLEDevice::startAdvertising(); }
+  void onConnect(BLEServer*) override { clientConnected=true; notifyLength=0; Serial.println("BLE client connected"); }
+  void onDisconnect(BLEServer*) override { clientConnected=false; notifyLength=0; Serial.println("BLE client disconnected; restarting advertising"); BLEDevice::startAdvertising(); }
 };
 
 static inline void put16(uint8_t* p,uint16_t v){p[0]=(uint8_t)(v&0xFF);p[1]=(uint8_t)(v>>8);}
@@ -42,12 +43,18 @@ static void appendSample(){
 }
 
 void setup(){
+  Serial.begin(115200); // USB is for diagnostics/firmware upload only; PCG data remains BLE-only.
+  delay(300);
+  Serial.println();
+  Serial.println("ElectroHeart BLE booting...");
+  Serial.println("Expected BLE name: ElectroHeart-BLE");
   analogReadResolution(12);
   analogSetPinAttenuation(PIN_MIC1,ADC_11db);
   analogSetPinAttenuation(PIN_MIC2,ADC_11db);
   analogSetPinAttenuation(PIN_MIC3,ADC_11db);
   BLEDevice::init(DEVICE_NAME);
   BLEDevice::setMTU(185);
+  Serial.println("BLE stack initialized");
   BLEServer* server=BLEDevice::createServer();
   server->setCallbacks(new ServerCallbacks());
   BLEService* service=server->createService(SERVICE_UUID);
@@ -55,10 +62,19 @@ void setup(){
   txCharacteristic->addDescriptor(new BLE2902());
   service->start();
   BLEAdvertising* advertising=BLEDevice::getAdvertising();
-  advertising->setName(DEVICE_NAME); // Explicitly include the device name in BLE advertising/scan response.
-  advertising->addServiceUUID(SERVICE_UUID);
+  // Put the complete local name in the primary advertisement and the
+  // 128-bit service UUID in the scan response to avoid packet-size overflow.
+  BLEAdvertisementData primaryAdvertisement;
+  primaryAdvertisement.setFlags(0x06);
+  primaryAdvertisement.setName(DEVICE_NAME);
+  BLEAdvertisementData scanResponse;
+  scanResponse.setCompleteServices(BLEUUID(SERVICE_UUID));
+  advertising->setAdvertisementData(primaryAdvertisement);
+  advertising->setScanResponseData(scanResponse);
   advertising->setScanResponse(true);
   advertising->start();
+  Serial.println("BLE advertising started");
+  Serial.println("Open Chrome dashboard and choose ElectroHeart-BLE");
   nextSample=micros();
 }
 
